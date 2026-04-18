@@ -77,7 +77,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 8),
                 _field(
                   controller: _emailCtrl,
-                  hint: 'hello@nshuti.love',
+                  hint: 'your@gmail.com',
                   icon: Icons.email_outlined,
                 ),
                 const SizedBox(height: 24),
