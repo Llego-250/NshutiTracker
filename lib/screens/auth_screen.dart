@@ -1,17 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
+import '../providers/providers.dart';
+import '../services/auth_service.dart';
 import 'main_shell.dart';
 
-class AuthScreen extends StatefulWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _obscure = true;
+  bool _isLogin = true;
+  bool _loading = false;
+  String? _error;
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
+
+  Future<void> _submit() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final svc = ref.read(authServiceProvider);
+      if (_isLogin) {
+        await svc.signIn(_emailCtrl.text.trim(), _passCtrl.text.trim());
+      } else {
+        await svc.signUp(_emailCtrl.text.trim(), _passCtrl.text.trim(), _nameCtrl.text.trim());
+      }
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+      }
+    } catch (e) {
+      setState(() => _error = e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    if (_emailCtrl.text.trim().isEmpty) {
+      setState(() => _error = 'Enter your email first.');
+      return;
+    }
+    try {
+      await ref.read(authServiceProvider).sendPasswordReset(_emailCtrl.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password reset email sent.')),
+        );
+      }
+    } catch (e) {
+      setState(() => _error = e.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,44 +74,40 @@ class _AuthScreenState extends State<AuthScreen> {
               children: [
                 const SizedBox(height: 60),
                 Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: bgCard2,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  width: 72, height: 72,
+                  decoration: BoxDecoration(color: bgCard2, borderRadius: BorderRadius.circular(20)),
                   child: const Icon(Icons.favorite, color: accentPink, size: 36),
                 ),
                 const SizedBox(height: 20),
                 ShaderMask(
                   shaderCallback: (b) => btnGradient.createShader(b),
-                  child: const Text(
-                    'NshutiTrack',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
+                  child: const Text('NshutiTrack',
+                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'RECONNECT. TOGETHER.',
-                  style: TextStyle(color: textSecondary, letterSpacing: 2, fontSize: 12),
-                ),
-                const SizedBox(height: 48),
+                const Text('RECONNECT. TOGETHER.',
+                    style: TextStyle(color: textSecondary, letterSpacing: 2, fontSize: 12)),
+                const SizedBox(height: 40),
+                if (!_isLogin) ...[
+                  _label('YOUR NAME'),
+                  const SizedBox(height: 8),
+                  _field(controller: _nameCtrl, hint: 'Solide Aze', icon: Icons.person_outline),
+                  const SizedBox(height: 20),
+                ],
                 _label('EMAIL ADDRESS'),
                 const SizedBox(height: 8),
-                _field(
-                  controller: _emailCtrl,
-                  hint: 'hello@nshuti.love',
-                  icon: Icons.email_outlined,
-                ),
-                const SizedBox(height: 24),
+                _field(controller: _emailCtrl, hint: 'hello@nshuti.love', icon: Icons.email_outlined),
+                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _label('PASSWORD'),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Forgot Password?', style: TextStyle(color: textSecondary, fontSize: 12)),
-                    ),
+                    if (_isLogin)
+                      TextButton(
+                        onPressed: _forgotPassword,
+                        child: const Text('Forgot Password?',
+                            style: TextStyle(color: textSecondary, fontSize: 12)),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -78,42 +117,44 @@ class _AuthScreenState extends State<AuthScreen> {
                   icon: Icons.lock_outline,
                   obscure: _obscure,
                   suffix: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: textSecondary, size: 18),
+                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility,
+                        color: textSecondary, size: 18),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
-                const SizedBox(height: 32),
+                if (_error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(_error!, style: const TextStyle(color: accentPink, fontSize: 12)),
+                ],
+                const SizedBox(height: 28),
                 GestureDetector(
-                  onTap: () => Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MainShell()),
-                  ),
+                  onTap: _loading ? null : _submit,
                   child: Container(
-                    width: double.infinity,
-                    height: 54,
+                    width: double.infinity, height: 54,
                     decoration: BoxDecoration(
-                      gradient: btnGradient,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                        gradient: btnGradient, borderRadius: BorderRadius.circular(30)),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'Sign In to Bond',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-                    ),
+                    child: _loading
+                        ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                        : Text(_isLogin ? 'Sign In to Bond' : 'Create Account',
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('New to the journey? ', style: TextStyle(color: textSecondary)),
-                    GestureDetector(
-                      onTap: () {},
-                      child: const Text('Create Account', style: TextStyle(color: accentPurple, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () => setState(() { _isLogin = !_isLogin; _error = null; }),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_isLogin ? 'New to the journey? ' : 'Already have an account? ',
+                          style: const TextStyle(color: textSecondary)),
+                      Text(_isLogin ? 'Create Account' : 'Sign In',
+                          style: const TextStyle(color: accentPurple, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 40),
                 const Text(
                   '"where technology meets the heartbeat of your most cherished relationships."',
                   textAlign: TextAlign.center,
@@ -142,8 +183,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }) =>
       Container(
         decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0xFF2A2D3E))),
-        ),
+            border: Border(bottom: BorderSide(color: Color(0xFF2A2D3E)))),
         child: TextField(
           controller: controller,
           obscureText: obscure,
