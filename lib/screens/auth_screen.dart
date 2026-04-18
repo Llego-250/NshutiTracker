@@ -1,26 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
-// Inlined MainShell widget to avoid a missing-file import; move this to
-// lib/screens/main_shell.dart if you prefer a separate file.
-class MainShell extends StatelessWidget {
-  const MainShell({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MainShell'),
-        backgroundColor: const Color(0xFF0D0F1A),
-      ),
-      body: const Center(
-        child: Text(
-          'Welcome to MainShell',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
+import 'main_shell.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -77,7 +57,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 8),
                 _field(
                   controller: _emailCtrl,
-                  hint: 'your@gmail.com',
+                  hint: 'hello@nshuti.love',
                   icon: Icons.email_outlined,
                 ),
                 const SizedBox(height: 24),
