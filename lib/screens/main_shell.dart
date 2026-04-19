@@ -49,6 +49,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         color: bgCard,
+        height: 60,
+        padding: EdgeInsets.zero,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
         child: Row(
