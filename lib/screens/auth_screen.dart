@@ -4,6 +4,7 @@ import '../theme.dart';
 import '../providers/providers.dart';
 import '../services/auth_service.dart';
 import 'main_shell.dart';
+import 'signup_screen.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -13,22 +14,15 @@ class AuthScreen extends ConsumerStatefulWidget {
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _obscure = true;
-  bool _isLogin = true;
   bool _loading = false;
   String? _error;
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  final _nameCtrl = TextEditingController();
 
   Future<void> _submit() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final svc = ref.read(authServiceProvider);
-      if (_isLogin) {
-        await svc.signIn(_emailCtrl.text.trim(), _passCtrl.text.trim());
-      } else {
-        await svc.signUp(_emailCtrl.text.trim(), _passCtrl.text.trim(), _nameCtrl.text.trim());
-      }
+      await ref.read(authServiceProvider).signIn(_emailCtrl.text.trim(), _passCtrl.text.trim());
       if (mounted) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
       }
@@ -88,12 +82,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 const Text('RECONNECT. TOGETHER.',
                     style: TextStyle(color: textSecondary, letterSpacing: 2, fontSize: 12)),
                 const SizedBox(height: 40),
-                if (!_isLogin) ...[
-                  _label('YOUR NAME'),
-                  const SizedBox(height: 8),
-                  _field(controller: _nameCtrl, hint: 'Solide Aze', icon: Icons.person_outline),
-                  const SizedBox(height: 20),
-                ],
                 _label('EMAIL ADDRESS'),
                 const SizedBox(height: 8),
                 _field(controller: _emailCtrl, hint: 'hello@nshuti.love', icon: Icons.email_outlined),
@@ -102,12 +90,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _label('PASSWORD'),
-                    if (_isLogin)
-                      TextButton(
-                        onPressed: _forgotPassword,
-                        child: const Text('Forgot Password?',
-                            style: TextStyle(color: textSecondary, fontSize: 12)),
-                      ),
+                    TextButton(
+                      onPressed: _forgotPassword,
+                      child: const Text('Forgot Password?',
+                          style: TextStyle(color: textSecondary, fontSize: 12)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -136,21 +123,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     alignment: Alignment.center,
                     child: _loading
                         ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                        : Text(_isLogin ? 'Sign In to Bond' : 'Create Account',
-                            style: const TextStyle(
+                        : const Text('Sign In to Bond',
+                            style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
                   ),
                 ),
                 const SizedBox(height: 20),
                 GestureDetector(
-                  onTap: () => setState(() { _isLogin = !_isLogin; _error = null; }),
-                  child: Row(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignUpScreen())),
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(_isLogin ? 'New to the journey? ' : 'Already have an account? ',
-                          style: const TextStyle(color: textSecondary)),
-                      Text(_isLogin ? 'Create Account' : 'Sign In',
-                          style: const TextStyle(color: accentPurple, fontWeight: FontWeight.bold)),
+                      Text('New to the journey? ', style: TextStyle(color: textSecondary)),
+                      Text('Create Account', style: TextStyle(color: accentPurple, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
