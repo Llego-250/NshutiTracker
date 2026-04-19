@@ -1,57 +1,100 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../theme.dart';
+import '../providers/providers.dart';
+import '../models/task.dart';
 import 'vision_board_screen.dart';
 
-class PlannerScreen extends StatefulWidget {
+class PlannerScreen extends ConsumerStatefulWidget {
   const PlannerScreen({super.key});
   @override
-  State<PlannerScreen> createState() => _PlannerScreenState();
+  ConsumerState<PlannerScreen> createState() => _PlannerScreenState();
 }
 
-class _PlannerScreenState extends State<PlannerScreen> {
+class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   int _tab = 0;
 
-  final _tasks = [
-    {
-      'tag': 'PARTNER\'S',
-      'time': '08:00 AM',
-      'title': 'Morning Coffee Ritual',
-      'desc': 'Prepare a fresh brew and spend 10 mins disconnected from screens.',
-      'done': false,
-      'color': accentPurple,
-      'addedBy': null,
-    },
-    {
-      'tag': 'PERSONAL',
-      'time': 'DONE',
-      'title': 'Journal Gratitude',
-      'desc': 'Write 3 things you appreciated about your partner.',
-      'done': true,
-      'color': Colors.green,
-      'addedBy': null,
-    },
-    {
-      'tag': 'PARTNER\'S',
-      'time': '07:00 PM',
-      'title': 'Evening Nature Walk',
-      'desc': 'A gentle 20-minute walk through the park near the sunset.',
-      'done': false,
-      'color': accentPurple,
-      'addedBy': 'SARAH ADDED THIS',
-    },
-    {
-      'tag': 'CONNECTION GOAL',
-      'time': 'TOMORROW',
-      'title': 'Deep Conversation Night',
-      'desc': 'Discuss our vision for the next five years. Use the prompt deck.',
-      'done': false,
-      'color': accentPink,
-      'addedBy': null,
-    },
-  ];
+  void _showAddTask() {
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    final timeCtrl = TextEditingController();
+    String tag = 'PERSONAL';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: bgCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModal) => Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 20, right: 20, top: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('New Task',
+                  style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              _input(titleCtrl, 'Title'),
+              const SizedBox(height: 10),
+              _input(descCtrl, 'Description'),
+              const SizedBox(height: 10),
+              _input(timeCtrl, 'Time (e.g. 08:00 AM)'),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: tag,
+                dropdownColor: bgCard2,
+                style: const TextStyle(color: textPrimary),
+                decoration: _inputDeco('Category'),
+                items: ['PERSONAL', "PARTNER'S", 'CONNECTION GOAL']
+                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                    .toList(),
+                onChanged: (v) => setModal(() => tag = v!),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: accentPurple,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  onPressed: () async {
+                    final user = ref.read(currentUserProvider).value;
+                    if (user == null || titleCtrl.text.trim().isEmpty) return;
+                    final task = Task(
+                      id: const Uuid().v4(),
+                      title: titleCtrl.text.trim(),
+                      description: descCtrl.text.trim(),
+                      tag: tag,
+                      time: timeCtrl.text.trim(),
+                      done: false,
+                      createdBy: user.uid,
+                      addedByName: user.name,
+                      createdAt: DateTime.now(),
+                    );
+                    await ref.read(taskServiceProvider).addTask(user.uid, user.partnerId, task);
+                    if (mounted) Navigator.pop(ctx);
+                  },
+                  child: const Text('Add Task', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final tasksAsync = ref.watch(tasksProvider);
+    final user = ref.watch(currentUserProvider).value;
+
     return Scaffold(
       backgroundColor: bgDark,
       body: SafeArea(
@@ -68,44 +111,58 @@ class _PlannerScreenState extends State<PlannerScreen> {
                   const Text('STRENGTHENING CONNECTIONS TODAY',
                       style: TextStyle(color: textSecondary, fontSize: 10, letterSpacing: 1.5)),
                   const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      _tabBtn('Daily', 0),
-                      const SizedBox(width: 8),
-                      _tabBtn('Weekly', 1),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => const VisionBoardScreen())),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(10)),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.copy, color: textSecondary, size: 16),
-                              SizedBox(width: 6),
-                              Text('VISION\nBOARD',
-                                  style: TextStyle(color: textPrimary, fontSize: 10, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ),
+                  Row(children: [
+                    _tabBtn('Daily', 0),
+                    const SizedBox(width: 8),
+                    _tabBtn('Weekly', 1),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const VisionBoardScreen())),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(10)),
+                        child: const Row(children: [
+                          Icon(Icons.copy, color: textSecondary, size: 16),
+                          SizedBox(width: 6),
+                          Text('VISION\nBOARD',
+                              style: TextStyle(color: textPrimary, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ]),
                       ),
-                    ],
-                  ),
+                    ),
+                  ]),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _tasks.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (_, i) => _taskCard(_tasks[i]),
+              child: tasksAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: accentPurple)),
+                error: (e, _) => Center(child: Text('$e', style: const TextStyle(color: accentPink))),
+                data: (tasks) {
+                  if (tasks.isEmpty) {
+                    return const Center(
+                      child: Text('No tasks yet.\nTap + to add your first task!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: textSecondary, fontSize: 14)),
+                    );
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: tasks.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (_, i) => _taskCard(tasks[i], user?.uid ?? ''),
+                  );
+                },
               ),
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: accentPurple,
+        onPressed: _showAddTask,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -120,103 +177,115 @@ class _PlannerScreenState extends State<PlannerScreen> {
           ),
           child: Text(label,
               style: TextStyle(
-                  color: _tab == idx ? Colors.white : textSecondary, fontWeight: FontWeight.w600)),
+                  color: _tab == idx ? Colors.white : textSecondary,
+                  fontWeight: FontWeight.w600)),
         ),
       );
 
-  Widget _taskCard(Map task) {
-    final done = task['done'] as bool;
-    final color = task['color'] as Color;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+  Widget _taskCard(Task task, String myUid) {
+    final color = task.tag == 'CONNECTION GOAL'
+        ? accentPink
+        : task.tag == "PARTNER'S"
+            ? accentPurple
+            : Colors.green;
+
+    return Dismissible(
+      key: Key(task.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+            color: accentPink.withOpacity(0.3), borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.delete, color: accentPink),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(task['tag'] as String,
-                    style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
-              ),
-              Text(task['time'] as String,
-                  style: TextStyle(
-                      color: done ? Colors.green : textSecondary,
-                      fontSize: 12,
-                      fontWeight: done ? FontWeight.bold : FontWeight.normal)),
-            ],
-          ),
+      onDismissed: (_) async {
+        final user = ref.read(currentUserProvider).value;
+        if (user == null) return;
+        await ref.read(taskServiceProvider).deleteTask(user.uid, user.partnerId, task.id);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                  color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+              child: Text(task.tag,
+                  style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
+            Text(task.done ? 'DONE' : task.time,
+                style: TextStyle(
+                    color: task.done ? Colors.green : textSecondary,
+                    fontSize: 12,
+                    fontWeight: task.done ? FontWeight.bold : FontWeight.normal)),
+          ]),
           const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 22,
-                height: 22,
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            GestureDetector(
+              onTap: () async {
+                final user = ref.read(currentUserProvider).value;
+                if (user == null) return;
+                await ref.read(taskServiceProvider)
+                    .toggleTask(user.uid, user.partnerId, task.id, !task.done);
+              },
+              child: Container(
+                width: 22, height: 22,
                 margin: const EdgeInsets.only(top: 2, right: 10),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: done ? Colors.green : Colors.transparent,
-                  border: done ? null : Border.all(color: color),
+                  color: task.done ? Colors.green : Colors.transparent,
+                  border: task.done ? null : Border.all(color: color),
                 ),
-                child: done ? const Icon(Icons.check, color: Colors.white, size: 14) : null,
+                child: task.done ? const Icon(Icons.check, color: Colors.white, size: 14) : null,
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task['title'] as String,
-                      style: TextStyle(
-                        color: done ? textSecondary : textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        decoration: done ? TextDecoration.lineThrough : null,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(task['desc'] as String,
-                        style: const TextStyle(color: textSecondary, fontSize: 12)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (task['addedBy'] != null) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const CircleAvatar(radius: 10, backgroundColor: accentPink),
-                const SizedBox(width: 6),
-                Text(task['addedBy'] as String,
-                    style: const TextStyle(color: accentPurple, fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(task.title,
+                  style: TextStyle(
+                    color: task.done ? textSecondary : textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    decoration: task.done ? TextDecoration.lineThrough : null,
+                  )),
+              if (task.description.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(task.description, style: const TextStyle(color: textSecondary, fontSize: 12)),
               ],
-            ),
-          ],
-          if (task['tag'] == 'CONNECTION GOAL') ...[
+            ])),
+          ]),
+          if (task.addedByName != null && task.createdBy != myUid) ...[
             const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: const LinearProgressIndicator(
-                value: 0.3,
-                backgroundColor: bgCard2,
-                valueColor: AlwaysStoppedAnimation(accentPink),
-                minHeight: 4,
-              ),
-            ),
+            Row(children: [
+              const CircleAvatar(radius: 10, backgroundColor: accentPink),
+              const SizedBox(width: 6),
+              Text('${task.addedByName!.toUpperCase()} ADDED THIS',
+                  style: const TextStyle(color: accentPurple, fontSize: 11, fontWeight: FontWeight.bold)),
+            ]),
           ],
-        ],
+        ]),
       ),
     );
   }
+
+  Widget _input(TextEditingController ctrl, String hint) => TextField(
+        controller: ctrl,
+        style: const TextStyle(color: textPrimary),
+        decoration: _inputDeco(hint),
+      );
+
+  InputDecoration _inputDeco(String hint) => InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: textSecondary),
+        filled: true,
+        fillColor: bgCard2,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+      );
 }
