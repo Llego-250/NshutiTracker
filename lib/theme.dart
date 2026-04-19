@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 const bgDark = Color(0xFF0D0F1A);
 const bgCard = Color(0xFF151828);
@@ -22,6 +23,18 @@ final appTheme = ThemeData(
   textTheme: const TextTheme(
     bodyMedium: TextStyle(color: textPrimary),
     bodySmall: TextStyle(color: textSecondary),
+  ),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: bgDark,
+    elevation: 0,
+    systemOverlayStyle: SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  ),
+  bottomAppBarTheme: const BottomAppBarThemeData(
+    color: bgCard,
+    elevation: 0,
   ),
   useMaterial3: true,
 );
