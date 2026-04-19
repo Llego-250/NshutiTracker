@@ -46,8 +46,8 @@ class VisionBoardScreen extends ConsumerWidget {
                     );
                   }
                   // Split into two columns
-                  final left = items.where((_, i) => i.isEven).toList();
-                  final right = items.where((_, i) => i.isOdd).toList();
+                  final left = items.whereIndexed((_, i) => i.isEven).toList();
+                  final right = items.whereIndexed((_, i) => i.isOdd).toList();
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -227,7 +227,7 @@ class VisionBoardScreen extends ConsumerWidget {
 }
 
 extension _IndexedWhere<T> on List<T> {
-  List<T> where(bool Function(T, int) test) {
+  List<T> whereIndexed(bool Function(T, int) test) {
     final result = <T>[];
     for (var i = 0; i < length; i++) {
       if (test(this[i], i)) result.add(this[i]);
