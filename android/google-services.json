@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "222964413725",
+    "project_id": "nshutitrack",
+    "storage_bucket": "nshutitrack.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:222964413725:android:6a8345d47f7cb124c11df4",
+        "android_client_info": {
+          "package_name": "com.company.nshutitracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "222964413725-v35cdop086dclul5rf4f4d822vv3dhq7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-ITfyMXfqMQmm_M7Mu717oy9FYUPyYg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "222964413725-v35cdop086dclul5rf4f4d822vv3dhq7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "222964413725-vqfs4i1qe08kifngr4vgto6t7u5ieslr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.company.nshutitracker"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
