@@ -27,8 +27,8 @@ class DefaultFirebaseOptions {
   // TODO: Add your Android app in Firebase Console, download google-services.json
   // and replace these values with the ones from that file.
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',
-    appId: 'YOUR_ANDROID_APP_ID',
+    apiKey: 'AIzaSyD-ITfyMXfqMQmm_M7Mu717oy9FYUPyYg4',
+    appId: '1:222964413725:android:6a8345d47f7cb124c11df4',
     messagingSenderId: '222964413725',
     projectId: 'nshutitrack',
     storageBucket: 'nshutitrack.firebasestorage.app',
