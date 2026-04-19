@@ -11,7 +11,13 @@ import 'providers/providers.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: bgDark,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
   runApp(const ProviderScope(child: NshutiTrackApp()));
 }
 
@@ -25,6 +31,10 @@ class NshutiTrackApp extends ConsumerWidget {
       title: 'NshutiTrack',
       debugShowCheckedModeBanner: false,
       theme: appTheme,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+        child: child!,
+      ),
       home: auth.when(
         data: (user) => user != null ? const MainShell() : const AuthScreen(),
         loading: () => const _Splash(),
