@@ -25,73 +25,349 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   void _showAddTask() {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
-    final timeCtrl = TextEditingController();
+    final locationCtrl = TextEditingController();
+    final meetingCtrl = TextEditingController();
+    final subtaskCtrl = TextEditingController();
     String tag = 'PERSONAL';
+    String priority = 'High';
+    String repeat = 'None';
+    bool notification = false;
+    TimeOfDay? pickedTime;
+    final subtasks = <SubTask>[];
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: bgCard,
+      backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModal) => Padding(
-          padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom,
-              left: 20, right: 20, top: 20),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('New Task',
-                style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            _input(titleCtrl, 'Title'),
-            const SizedBox(height: 10),
-            _input(descCtrl, 'Description'),
-            const SizedBox(height: 10),
-            _input(timeCtrl, 'Time (e.g. 08:00 AM)'),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              value: tag,
-              dropdownColor: bgCard2,
-              style: const TextStyle(color: textPrimary),
-              decoration: _inputDeco('Category'),
-              items: ['PERSONAL', "PARTNER'S", 'CONNECTION GOAL']
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                  .toList(),
-              onChanged: (v) => setModal(() => tag = v!),
+        builder: (ctx, setModal) {
+          return Container(
+            height: MediaQuery.of(ctx).size.height * 0.92,
+            decoration: const BoxDecoration(
+              color: bgDark,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: accentPurple,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                onPressed: () async {
-                  final user = ref.read(currentUserProvider).value;
-                  if (user == null || titleCtrl.text.trim().isEmpty) return;
-                  final task = Task(
-                    id: const Uuid().v4(),
-                    title: titleCtrl.text.trim(),
-                    description: descCtrl.text.trim(),
-                    tag: tag,
-                    time: timeCtrl.text.trim(),
-                    done: false,
-                    createdBy: user.uid,
-                    addedByName: user.name,
-                    createdAt: _selectedDate,
-                  );
-                  await ref.read(taskServiceProvider).addTask(user.uid, user.partnerId, task);
-                  if (mounted) Navigator.pop(ctx);
-                },
-                child: const Text('Add Task', style: TextStyle(color: Colors.white)),
+            child: Column(children: [
+              // ── Top bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Row(children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(ctx),
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(color: bgCard, shape: BoxShape.circle),
+                      child: const Icon(Icons.close, color: textPrimary, size: 18),
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () async {
+                      final user = ref.read(currentUserProvider).value;
+                      if (user == null || titleCtrl.text.trim().isEmpty) return;
+                      final task = Task(
+                        id: const Uuid().v4(),
+                        title: titleCtrl.text.trim(),
+                        description: descCtrl.text.trim(),
+                        tag: tag,
+                        time: pickedTime != null
+                            ? pickedTime!.format(ctx)
+                            : '',
+                        done: false,
+                        createdBy: user.uid,
+                        addedByName: user.name,
+                        createdAt: _selectedDate,
+                        location: locationCtrl.text.trim().isEmpty ? null : locationCtrl.text.trim(),
+                        meetingLink: meetingCtrl.text.trim().isEmpty ? null : meetingCtrl.text.trim(),
+                        priority: priority,
+                        notification: notification,
+                        repeat: repeat,
+                        subtasks: subtasks,
+                      );
+                      await ref.read(taskServiceProvider).addTask(user.uid, user.partnerId, task);
+                      if (mounted) Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: const BoxDecoration(color: accentPurple, shape: BoxShape.circle),
+                      child: const Icon(Icons.check, color: Colors.white, size: 18),
+                    ),
+                  ),
+                ]),
               ),
-            ),
-            const SizedBox(height: 20),
-          ]),
-        ),
+              // ── Scrollable body
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    left: 20, right: 20, top: 16,
+                    bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+                  ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('New task',
+                        style: TextStyle(color: textPrimary, fontSize: 26, fontWeight: FontWeight.bold)),
+                    const Text('Add all details',
+                        style: TextStyle(color: textSecondary, fontSize: 13)),
+                    const SizedBox(height: 20),
+
+                    // Title + Description card
+                    _section(Column(children: [
+                      TextField(
+                        controller: titleCtrl,
+                        style: const TextStyle(color: textPrimary, fontSize: 15),
+                        decoration: _plainDeco('Task title'),
+                      ),
+                      Divider(color: Colors.white.withOpacity(0.07), height: 1),
+                      TextField(
+                        controller: descCtrl,
+                        maxLines: 3,
+                        style: const TextStyle(color: textPrimary, fontSize: 13),
+                        decoration: _plainDeco('Task description'),
+                      ),
+                    ])),
+                    const SizedBox(height: 12),
+
+                    // Location + Meeting link
+                    _section(Column(children: [
+                      TextField(
+                        controller: locationCtrl,
+                        style: const TextStyle(color: textPrimary, fontSize: 13),
+                        decoration: _plainDeco('Location'),
+                      ),
+                      Divider(color: Colors.white.withOpacity(0.07), height: 1),
+                      TextField(
+                        controller: meetingCtrl,
+                        style: const TextStyle(color: textPrimary, fontSize: 13),
+                        decoration: _plainDeco('Meeting link',
+                            icon: const Icon(Icons.link, color: textSecondary, size: 16)),
+                      ),
+                    ])),
+                    const SizedBox(height: 12),
+
+                    // Priority
+                    _section(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Text('Select priority',
+                            style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600)),
+                      ),
+                      Row(
+                        children: ['High', 'Medium', 'Low', 'None'].map((p) {
+                          final active = priority == p;
+                          final color = p == 'High' ? accentPink
+                              : p == 'Medium' ? Colors.orange
+                              : p == 'Low' ? Colors.green
+                              : textSecondary;
+                          return GestureDetector(
+                            onTap: () => setModal(() => priority = p),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                              decoration: BoxDecoration(
+                                color: active ? color : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20),
+                                border: active ? null : Border.all(color: Colors.white.withOpacity(0.1)),
+                              ),
+                              child: Text(p,
+                                  style: TextStyle(
+                                      color: active ? Colors.white : textSecondary,
+                                      fontWeight: active ? FontWeight.bold : FontWeight.normal,
+                                      fontSize: 13)),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ])),
+                    const SizedBox(height: 12),
+
+                    // Due date / Time / Notification / Repeat / Category
+                    _section(Column(children: [
+                      _row('Due date',
+                          Text(DateFormat('d MMM yyyy').format(_selectedDate),
+                              style: const TextStyle(color: textSecondary, fontSize: 13))),
+                      _divider(),
+                      GestureDetector(
+                        onTap: () async {
+                          final t = await showTimePicker(
+                            context: ctx,
+                            initialTime: pickedTime ?? TimeOfDay.now(),
+                          );
+                          if (t != null) setModal(() => pickedTime = t);
+                        },
+                        child: _row('Time',
+                            Text(
+                              pickedTime != null ? pickedTime!.format(ctx) : '--:--',
+                              style: const TextStyle(color: textSecondary, fontSize: 13),
+                            )),
+                      ),
+                      _divider(),
+                      _row('Notification',
+                          Switch(
+                            value: notification,
+                            onChanged: (v) => setModal(() => notification = v),
+                            activeColor: accentPurple,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          )),
+                      _divider(),
+                      GestureDetector(
+                        onTap: () async {
+                          final opts = ['None', 'Daily', 'Weekly', 'Monthly'];
+                          final picked = await showModalBottomSheet<String>(
+                            context: ctx,
+                            backgroundColor: bgCard,
+                            builder: (_) => Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: opts.map((o) => ListTile(
+                                title: Text(o, style: const TextStyle(color: textPrimary)),
+                                onTap: () => Navigator.pop(ctx, o),
+                              )).toList(),
+                            ),
+                          );
+                          if (picked != null) setModal(() => repeat = picked);
+                        },
+                        child: _row('Repeat',
+                            Row(children: [
+                              Text(repeat, style: const TextStyle(color: textSecondary, fontSize: 13)),
+                              const Icon(Icons.chevron_right, color: textSecondary, size: 16),
+                            ])),
+                      ),
+                      _divider(),
+                      GestureDetector(
+                        onTap: () async {
+                          final opts = ['PERSONAL', "PARTNER'S", 'CONNECTION GOAL'];
+                          final picked = await showModalBottomSheet<String>(
+                            context: ctx,
+                            backgroundColor: bgCard,
+                            builder: (_) => Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: opts.map((o) => ListTile(
+                                title: Text(o, style: const TextStyle(color: textPrimary)),
+                                onTap: () => Navigator.pop(ctx, o),
+                              )).toList(),
+                            ),
+                          );
+                          if (picked != null) setModal(() => tag = picked);
+                        },
+                        child: _row('Category',
+                            Row(children: [
+                              Text(tag, style: const TextStyle(color: textSecondary, fontSize: 13)),
+                              const Icon(Icons.chevron_right, color: textSecondary, size: 16),
+                            ])),
+                      ),
+                    ])),
+                    const SizedBox(height: 12),
+
+                    // Subtasks (optional)
+                    _section(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Text('Subtasks (optional)',
+                            style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600)),
+                      ),
+                      ...subtasks.asMap().entries.map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(children: [
+                          GestureDetector(
+                            onTap: () => setModal(() => subtasks[e.key].done = !subtasks[e.key].done),
+                            child: Container(
+                              width: 18, height: 18,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: e.value.done ? accentPurple : Colors.transparent,
+                                border: e.value.done ? null : Border.all(color: textSecondary),
+                              ),
+                              child: e.value.done
+                                  ? const Icon(Icons.check, color: Colors.white, size: 11)
+                                  : null,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(e.value.title,
+                                style: TextStyle(
+                                  color: e.value.done ? textSecondary : textPrimary,
+                                  fontSize: 13,
+                                  decoration: e.value.done ? TextDecoration.lineThrough : null,
+                                )),
+                          ),
+                          GestureDetector(
+                            onTap: () => setModal(() => subtasks.removeAt(e.key)),
+                            child: const Icon(Icons.close, color: textSecondary, size: 16),
+                          ),
+                        ]),
+                      )),
+                      Row(children: [
+                        Expanded(
+                          child: TextField(
+                            controller: subtaskCtrl,
+                            style: const TextStyle(color: textPrimary, fontSize: 13),
+                            decoration: _plainDeco('Add subtask...'),
+                            onSubmitted: (v) {
+                              if (v.trim().isEmpty) return;
+                              setModal(() {
+                                subtasks.add(SubTask(title: v.trim()));
+                                subtaskCtrl.clear();
+                              });
+                            },
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            if (subtaskCtrl.text.trim().isEmpty) return;
+                            setModal(() {
+                              subtasks.add(SubTask(title: subtaskCtrl.text.trim()));
+                              subtaskCtrl.clear();
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                                color: accentPurple.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8)),
+                            child: const Icon(Icons.add, color: accentPurple, size: 18),
+                          ),
+                        ),
+                      ]),
+                    ])),
+                  ]),
+                ),
+              ),
+            ]),
+          );
+        },
       ),
     );
   }
+
+  Widget _section(Widget child) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: bgCard,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: child,
+      );
+
+  Widget _row(String label, Widget trailing) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text(label, style: const TextStyle(color: textPrimary, fontSize: 14)),
+          trailing,
+        ]),
+      );
+
+  Widget _divider() => Divider(color: Colors.white.withOpacity(0.07), height: 1);
+
+  InputDecoration _plainDeco(String hint, {Widget? icon}) => InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: textSecondary, fontSize: 13),
+        prefixIcon: icon,
+        border: InputBorder.none,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 10),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -470,20 +746,6 @@ Widget _tabBtn(String label, int idx) {
     );
   }
 
-  Widget _input(TextEditingController ctrl, String hint) => TextField(
-        controller: ctrl,
-        style: const TextStyle(color: textPrimary),
-        decoration: _inputDeco(hint),
-      );
-
-  InputDecoration _inputDeco(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: textSecondary),
-        filled: true,
-        fillColor: bgCard2,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-      );
 }
 
 // ── Liquid Glass Calendar ─────────────────────────────────────────────────────
