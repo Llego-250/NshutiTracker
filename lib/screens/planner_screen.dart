@@ -19,6 +19,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _calendarMonth = DateTime.now();
   bool _showCalendar = false;
+  int _viewMode = 0; // 0=list 1=large 2=small
 
   // ── Add task sheet ──────────────────────────────────────────────────────────
   void _showAddTask() {
@@ -145,7 +146,17 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
               ),
             ],
 
-            // ── Task list ──────────────────────────────────────────────────────
+            // ── View toggle + Task list ────────────────────────────────────────
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(children: [
+                const Text('Tasks', style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                const Spacer(),
+                _viewToggle(),
+              ]),
+            ),
+            const SizedBox(height: 8),
             Expanded(
               child: tasksAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator(color: accentPurple)),
@@ -165,11 +176,24 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                       ]),
                     );
                   }
-                  return ListView.separated(
+                  if (_viewMode == 0) {
+                    return ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: tasks.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (_, i) => _taskCard(tasks[i], user?.uid ?? ''),
+                    );
+                  }
+                  return GridView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _viewMode == 2 ? 3 : 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: _viewMode == 2 ? 0.85 : 1.05,
+                    ),
                     itemCount: tasks.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (_, i) => _taskCard(tasks[i], user?.uid ?? ''),
+                    itemBuilder: (_, i) => _taskGridCard(tasks[i], user?.uid ?? '', large: _viewMode == 1),
                   );
                 },
               ),
@@ -179,7 +203,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
           // ── Floating Calendar overlay (tab == 2) ───────────────────────────
           if (_tab == 2)
             Positioned(
-              top: 100,
+              top: 150,
               left: 0,
               right: 0,
               child: Material(
@@ -242,6 +266,117 @@ Widget _tabBtn(String label, int idx) {
     ),
   );
 }
+
+  Widget _viewToggle() {
+    final modes = [
+      (Icons.view_list_rounded, 'List'),
+      (Icons.grid_view_rounded, 'Large'),
+      (Icons.apps_rounded, 'Small'),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: List.generate(3, (i) {
+          final active = _viewMode == i;
+          return GestureDetector(
+            onTap: () => setState(() => _viewMode = i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: active ? accentPurple : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(modes[i].$1, color: active ? Colors.white : textSecondary, size: 18),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _taskGridCard(Task task, String myUid, {required bool large}) {
+    final color = task.tag == 'CONNECTION GOAL'
+        ? accentPink
+        : task.tag == "PARTNER'S"
+            ? accentPurple
+            : Colors.green;
+    return Dismissible(
+      key: Key('grid_${task.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+            color: accentPink.withOpacity(0.3), borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.delete, color: accentPink, size: 18),
+      ),
+      onDismissed: (_) async {
+        final user = ref.read(currentUserProvider).value;
+        if (user == null) return;
+        await ref.read(taskServiceProvider).deleteTask(user.uid, user.partnerId, task.id);
+      },
+      child: Container(
+        padding: EdgeInsets.all(large ? 14 : 10),
+        decoration: BoxDecoration(
+          color: bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.25)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                  color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+              child: Text(task.tag.split(' ').first,
+                  style: TextStyle(color: color, fontSize: large ? 9 : 8, fontWeight: FontWeight.bold)),
+            ),
+            GestureDetector(
+              onTap: () async {
+                final user = ref.read(currentUserProvider).value;
+                if (user == null) return;
+                await ref.read(taskServiceProvider)
+                    .toggleTask(user.uid, user.partnerId, task.id, !task.done);
+              },
+              child: Container(
+                width: 18, height: 18,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: task.done ? Colors.green : Colors.transparent,
+                  border: task.done ? null : Border.all(color: color),
+                ),
+                child: task.done ? const Icon(Icons.check, color: Colors.white, size: 12) : null,
+              ),
+            ),
+          ]),
+          const Spacer(),
+          Text(
+            task.title,
+            maxLines: large ? 2 : 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: task.done ? textSecondary : textPrimary,
+              fontSize: large ? 14 : 12,
+              fontWeight: FontWeight.bold,
+              decoration: task.done ? TextDecoration.lineThrough : null,
+            ),
+          ),
+          if (large && task.description.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(task.description,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: textSecondary, fontSize: 11)),
+          ],
+          const SizedBox(height: 4),
+          Text(task.time,
+              style: TextStyle(color: textSecondary, fontSize: large ? 11 : 10)),
+        ]),
+      ),
+    );
+  }
 
   Widget _taskCard(Task task, String myUid) {
     final color = task.tag == 'CONNECTION GOAL'
