@@ -12,6 +12,8 @@ class AppUser {
   final String currentMood;
   final int accentIdx;
   final bool nocturnalMode;
+  final String habitType;   // e.g. 'water', 'heart', 'book'
+  final int habitGoal;      // daily goal count
 
   const AppUser({
     required this.uid,
@@ -25,6 +27,8 @@ class AppUser {
     this.currentMood = 'Dreamy',
     this.accentIdx = 0,
     this.nocturnalMode = true,
+    this.habitType = 'water',
+    this.habitGoal = 8,
   });
 
   factory AppUser.fromDoc(DocumentSnapshot doc) {
@@ -41,6 +45,8 @@ class AppUser {
       currentMood: d['currentMood'] ?? 'Dreamy',
       accentIdx: d['accentIdx'] ?? 0,
       nocturnalMode: d['nocturnalMode'] ?? true,
+      habitType: d['habitType'] ?? 'water',
+      habitGoal: d['habitGoal'] ?? 8,
     );
   }
 
@@ -55,6 +61,8 @@ class AppUser {
         'currentMood': currentMood,
         'accentIdx': accentIdx,
         'nocturnalMode': nocturnalMode,
+        'habitType': habitType,
+        'habitGoal': habitGoal,
       };
 
   AppUser copyWith({
