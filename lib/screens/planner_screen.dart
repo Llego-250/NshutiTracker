@@ -618,10 +618,10 @@ Widget _tabBtn(String label, int idx) {
 }
 
   Widget _viewToggle() {
-    final modes = [
-      (Icons.view_list_rounded, 'List'),
-      (Icons.grid_view_rounded, 'Large'),
-      (Icons.apps_rounded, 'Small'),
+    final modes = <IconData>[
+      Icons.view_list_rounded,
+      Icons.grid_view_rounded,
+      Icons.apps_rounded,
     ];
     return Container(
       padding: const EdgeInsets.all(4),
@@ -638,7 +638,7 @@ Widget _tabBtn(String label, int idx) {
                 color: active ? accentPurple : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(modes[i].$1, color: active ? Colors.white : textSecondary, size: 18),
+              child: Icon(modes[i], color: active ? Colors.white : textSecondary, size: 18),
             ),
           );
         }),
