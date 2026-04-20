@@ -5,7 +5,7 @@ import 'dashboard_screen.dart';
 import 'planner_screen.dart';
 import 'find_screen.dart';
 import 'profile_screen.dart';
-import 'chat_screen.dart';
+import 'widgets/habit_tracker_widget.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
@@ -23,29 +23,12 @@ class _MainShellState extends ConsumerState<MainShell> {
     ProfileScreen(),
   ];
 
-  void _openChat() => showModalBottomSheet(
-        context: context,
-        backgroundColor: bgCard,
-        shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-        isScrollControlled: true,
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
-        builder: (_) => const ChatScreen(),
-      );
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgDark,
       body: _screens[_idx],
-      floatingActionButton: GestureDetector(
-        onTap: _openChat,
-        child: Container(
-          width: 56, height: 56,
-          decoration: const BoxDecoration(gradient: btnGradient, shape: BoxShape.circle),
-          child: const Icon(Icons.chat_bubble, color: Colors.white, size: 26),
-        ),
-      ),
+      floatingActionButton: const HabitFabButton(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         color: bgCard,
@@ -72,7 +55,11 @@ class _MainShellState extends ConsumerState<MainShell> {
     return GestureDetector(
       onTap: () => setState(() => _idx = idx),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(active && idx == 2 ? Icons.location_on : icon, color: active ? accentPurple : textSecondary, size: 22),
+        Icon(
+          active && idx == 2 ? Icons.location_on : icon,
+          color: active ? accentPurple : textSecondary,
+          size: 22,
+        ),
         const SizedBox(height: 2),
         Text(label,
             style: TextStyle(
