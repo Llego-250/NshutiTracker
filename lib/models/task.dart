@@ -1,15 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+class SubTask {
+  final String title;
+  bool done;
+  SubTask({required this.title, this.done = false});
+
+  factory SubTask.fromMap(Map<String, dynamic> m) =>
+      SubTask(title: m['title'] ?? '', done: m['done'] ?? false);
+  Map<String, dynamic> toMap() => {'title': title, 'done': done};
+}
+
 class Task {
   final String id;
   final String title;
   final String description;
-  final String tag; // PERSONAL, PARTNER'S, CONNECTION GOAL
+  final String tag;
   final String time;
   final bool done;
   final String createdBy;
   final String? addedByName;
   final DateTime createdAt;
+  final String? location;
+  final String? meetingLink;
+  final String priority; // High Medium Low None
+  final bool notification;
+  final String repeat;   // None Daily Weekly Monthly
+  final List<SubTask> subtasks;
 
   const Task({
     required this.id,
@@ -21,6 +37,12 @@ class Task {
     required this.createdBy,
     this.addedByName,
     required this.createdAt,
+    this.location,
+    this.meetingLink,
+    this.priority = 'None',
+    this.notification = false,
+    this.repeat = 'None',
+    this.subtasks = const [],
   });
 
   factory Task.fromDoc(DocumentSnapshot doc) {
@@ -35,6 +57,14 @@ class Task {
       createdBy: d['createdBy'] ?? '',
       addedByName: d['addedByName'],
       createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      location: d['location'],
+      meetingLink: d['meetingLink'],
+      priority: d['priority'] ?? 'None',
+      notification: d['notification'] ?? false,
+      repeat: d['repeat'] ?? 'None',
+      subtasks: (d['subtasks'] as List<dynamic>? ?? [])
+          .map((e) => SubTask.fromMap(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -47,6 +77,12 @@ class Task {
         'createdBy': createdBy,
         'addedByName': addedByName,
         'createdAt': Timestamp.fromDate(createdAt),
+        'location': location,
+        'meetingLink': meetingLink,
+        'priority': priority,
+        'notification': notification,
+        'repeat': repeat,
+        'subtasks': subtasks.map((s) => s.toMap()).toList(),
       };
 
   Task copyWith({bool? done}) => Task(
@@ -59,5 +95,11 @@ class Task {
         createdBy: createdBy,
         addedByName: addedByName,
         createdAt: createdAt,
+        location: location,
+        meetingLink: meetingLink,
+        priority: priority,
+        notification: notification,
+        repeat: repeat,
+        subtasks: subtasks,
       );
 }
