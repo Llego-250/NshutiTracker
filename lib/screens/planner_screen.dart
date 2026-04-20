@@ -99,101 +99,111 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     return Scaffold(
       backgroundColor: bgDark,
       body: SafeArea(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // ── Header ──────────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Daily Planner',
-                  style: TextStyle(color: textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text('STRENGTHENING CONNECTIONS TODAY',
-                  style: TextStyle(color: textSecondary, fontSize: 10, letterSpacing: 1.5)),
-              const SizedBox(height: 16),
-              // Tab row
-              Row(children: [
-                _tabBtn('Daily', 0),
-                const SizedBox(width: 8),
-                _tabBtn('Weekly', 1),
-                const SizedBox(width: 8),
-                _tabBtn('Calendar', 2),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const VisionBoardScreen())),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(10)),
-                    child: const Row(children: [
-                      Icon(Icons.copy, color: textSecondary, size: 14),
-                      SizedBox(width: 4),
-                      Text('VISION\nBOARD',
-                          style: TextStyle(color: textPrimary, fontSize: 9, fontWeight: FontWeight.bold)),
-                    ]),
-                  ),
-                ),
-              ]),
-            ]),
-          ),
-
-          // ── Calendar (shown when tab == 2) ──────────────────────────────────
-          if (_tab == 2) ...[
-            const SizedBox(height: 12),
-            _LiquidGlassCalendar(
-              selectedDate: _selectedDate,
-              month: _calendarMonth,
-              onDateSelected: (d) => setState(() => _selectedDate = d),
-              onMonthChanged: (m) => setState(() => _calendarMonth = m),
-            ),
-            const SizedBox(height: 8),
+        child: Stack(children: [
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // ── Header ────────────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                DateFormat('EEEE, MMMM d').format(_selectedDate),
-                style: const TextStyle(color: accentPurple, fontWeight: FontWeight.w600),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Daily Planner',
+                    style: TextStyle(color: textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
+                const Text('STRENGTHENING CONNECTIONS TODAY',
+                    style: TextStyle(color: textSecondary, fontSize: 10, letterSpacing: 1.5)),
+                const SizedBox(height: 16),
+                Row(children: [
+                  _tabBtn('Daily', 0),
+                  const SizedBox(width: 8),
+                  _tabBtn('Weekly', 1),
+                  const SizedBox(width: 8),
+                  _tabBtn('Calendar', 2),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const VisionBoardScreen())),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(10)),
+                      child: const Row(children: [
+                        Icon(Icons.copy, color: textSecondary, size: 14),
+                        SizedBox(width: 4),
+                        Text('VISION\nBOARD',
+                            style: TextStyle(color: textPrimary, fontSize: 9, fontWeight: FontWeight.bold)),
+                      ]),
+                    ),
+                  ),
+                ]),
+              ]),
+            ),
+
+            // ── Weekly strip (shown when tab == 1) ────────────────────────────
+            if (_tab == 1) ...[
+              const SizedBox(height: 12),
+              _WeekStrip(
+                selectedDate: _selectedDate,
+                onDateSelected: (d) => setState(() => _selectedDate = d),
+              ),
+            ],
+
+            // ── Task list ──────────────────────────────────────────────────────
+            Expanded(
+              child: tasksAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: accentPurple)),
+                error: (e, _) => Center(child: Text('$e', style: const TextStyle(color: accentPink))),
+                data: (allTasks) {
+                  final tasks = _filterTasks(allTasks);
+                  if (tasks.isEmpty) {
+                    return Center(
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.event_note, color: textSecondary, size: 48),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No tasks for ${DateFormat('MMM d').format(_selectedDate)}.\nTap + to add one!',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: textSecondary, fontSize: 14),
+                        ),
+                      ]),
+                    );
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: tasks.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (_, i) => _taskCard(tasks[i], user?.uid ?? ''),
+                  );
+                },
               ),
             ),
-          ],
+          ]),
 
-          // ── Weekly strip (shown when tab == 1) ──────────────────────────────
-          if (_tab == 1) ...[
-            const SizedBox(height: 12),
-            _WeekStrip(
-              selectedDate: _selectedDate,
-              onDateSelected: (d) => setState(() => _selectedDate = d),
+          // ── Floating Calendar overlay (tab == 2) ───────────────────────────
+          if (_tab == 2)
+            Positioned(
+              top: 100,
+              left: 0,
+              right: 0,
+              child: Material(
+                color: Colors.transparent,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _LiquidGlassCalendar(
+                    selectedDate: _selectedDate,
+                    month: _calendarMonth,
+                    onDateSelected: (d) => setState(() {
+                      _selectedDate = d;
+                      _tab = 0;
+                    }),
+                    onMonthChanged: (m) => setState(() => _calendarMonth = m),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      DateFormat('EEEE, MMMM d').format(_selectedDate),
+                      style: const TextStyle(color: accentPurple, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ]),
+              ),
             ),
-          ],
-
-
-
-          // ── Task list ────────────────────────────────────────────────────────
-          Expanded(
-            child: tasksAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator(color: accentPurple)),
-              error: (e, _) => Center(child: Text('$e', style: const TextStyle(color: accentPink))),
-              data: (allTasks) {
-                final tasks = _filterTasks(allTasks);
-                if (tasks.isEmpty) {
-                  return Center(
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.event_note, color: textSecondary, size: 48),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No tasks for ${DateFormat('MMM d').format(_selectedDate)}.\nTap + to add one!',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: textSecondary, fontSize: 14),
-                      ),
-                    ]),
-                  );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: tasks.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (_, i) => _taskCard(tasks[i], user?.uid ?? ''),
-                );
-              },
-            ),
-          ),
         ]),
       ),
       floatingActionButton: FloatingActionButton(
