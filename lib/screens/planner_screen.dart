@@ -41,11 +41,16 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModal) {
-          return Container(
+          return ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Container(
             height: MediaQuery.of(ctx).size.height * 0.92,
-            decoration: const BoxDecoration(
-              color: bgDark,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.07),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border.all(color: Colors.white.withOpacity(0.15)),
             ),
             child: Column(children: [
               // ── Top bar
@@ -334,20 +339,29 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                 ),
               ),
             ]),
+              ),
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _section(Widget child) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: bgCard,
-          borderRadius: BorderRadius.circular(16),
+  Widget _section(Widget child) => ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.12)),
+            ),
+            child: child,
+          ),
         ),
-        child: child,
       );
 
   Widget _row(String label, Widget trailing) => Padding(
