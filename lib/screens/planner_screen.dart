@@ -163,62 +163,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
             ),
           ],
 
-          // ── Daily date chip (tab == 0) ───────────────────────────────────────
-          if (_tab == 0) ...[
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(children: [
-                GestureDetector(
-                  onTap: () => setState(() => _selectedDate = DateTime.now()),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _isToday(_selectedDate) ? accentPurple : bgCard,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _isToday(_selectedDate)
-                          ? 'Today'
-                          : DateFormat('MMM d').format(_selectedDate),
-                      style: TextStyle(
-                          color: _isToday(_selectedDate) ? Colors.white : textSecondary,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                      builder: (ctx, child) => Theme(
-                        data: ThemeData.dark().copyWith(
-                          colorScheme: const ColorScheme.dark(primary: accentPurple),
-                        ),
-                        child: child!,
-                      ),
-                    );
-                    if (picked != null) setState(() => _selectedDate = picked);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(20)),
-                    child: const Row(children: [
-                      Icon(Icons.calendar_today, color: textSecondary, size: 14),
-                      SizedBox(width: 6),
-                      Text('Pick date', style: TextStyle(color: textSecondary, fontSize: 12)),
-                    ]),
-                  ),
-                ),
-              ]),
-            ),
-          ],
 
-          const SizedBox(height: 12),
 
           // ── Task list ────────────────────────────────────────────────────────
           Expanded(
@@ -259,36 +204,33 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     );
   }
 
-  // Filter tasks by selected date
-  List<Task> _filterTasks(List<Task> tasks) {
-    return tasks.where((t) {
-      final d = t.createdAt;
-      return d.year == _selectedDate.year &&
-          d.month == _selectedDate.month &&
-          d.day == _selectedDate.day;
-    }).toList();
-  }
+// Filter tasks by selected date
+List<Task> _filterTasks(List<Task> tasks) {
+  return tasks.where((t) {
+    final d = t.createdAt;
+    return d.year == _selectedDate.year &&
+        d.month == _selectedDate.month &&
+        d.day == _selectedDate.day;
+  }).toList();
+}
 
-  bool _isToday(DateTime d) {
-    final now = DateTime.now();
-    return d.year == now.year && d.month == now.month && d.day == now.day;
-  }
-
-  Widget _tabBtn(String label, int idx) => GestureDetector(
-        onTap: () => setState(() => _tab = idx),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: _tab == idx ? accentPurple : bgCard,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(label,
-              style: TextStyle(
-                  color: _tab == idx ? Colors.white : textSecondary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13)),
-        ),
-      );
+Widget _tabBtn(String label, int idx) {
+  return GestureDetector(
+    onTap: () => setState(() => _tab = idx),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: _tab == idx ? accentPurple : bgCard,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              color: _tab == idx ? Colors.white : textSecondary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13)),
+    ),
+  );
+}
 
   Widget _taskCard(Task task, String myUid) {
     final color = task.tag == 'CONNECTION GOAL'
