@@ -68,12 +68,13 @@ class _MainShellState extends ConsumerState<MainShell> {
               ],
             ),
           ),
-          // Habit drop button — floating above nav bar
-          Positioned(
-            top: -70,
-            right: 12,
-            child: const HabitFabButton(),
-          ),
+          // Habit drop — only visible on Home screen
+          if (_idx == 0)
+            const Positioned(
+              top: -70,
+              right: 12,
+              child: HabitFabButton(),
+            ),
         ],
       ),
     );
