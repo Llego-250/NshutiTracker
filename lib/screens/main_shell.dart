@@ -5,6 +5,7 @@ import 'dashboard_screen.dart';
 import 'planner_screen.dart';
 import 'find_screen.dart';
 import 'profile_screen.dart';
+import 'chat_screen.dart';
 import 'widgets/habit_tracker_widget.dart';
 
 class MainShell extends ConsumerStatefulWidget {
@@ -23,29 +24,57 @@ class _MainShellState extends ConsumerState<MainShell> {
     ProfileScreen(),
   ];
 
+  void _openChat() => showModalBottomSheet(
+        context: context,
+        backgroundColor: bgCard,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        isScrollControlled: true,
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
+        builder: (_) => const ChatScreen(),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgDark,
       body: _screens[_idx],
-      floatingActionButton: const HabitFabButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: bgCard,
-        height: 60,
-        padding: EdgeInsets.zero,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _navItem(Icons.home_outlined, 'HOME', 0),
-            _navItem(Icons.calendar_today_outlined, 'PLANNER', 1),
-            const SizedBox(width: 56),
-            _navItem(Icons.location_on_outlined, 'FIND', 2),
-            _navItem(Icons.person_outline, 'PROFILE', 3),
-          ],
+      floatingActionButton: GestureDetector(
+        onTap: _openChat,
+        child: Container(
+          width: 56, height: 56,
+          decoration: const BoxDecoration(gradient: btnGradient, shape: BoxShape.circle),
+          child: const Icon(Icons.chat_bubble, color: Colors.white, size: 26),
         ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          BottomAppBar(
+            color: bgCard,
+            height: 60,
+            padding: EdgeInsets.zero,
+            shape: const CircularNotchedRectangle(),
+            notchMargin: 8,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _navItem(Icons.home_outlined, 'HOME', 0),
+                _navItem(Icons.calendar_today_outlined, 'PLANNER', 1),
+                const SizedBox(width: 56),
+                _navItem(Icons.location_on_outlined, 'FIND', 2),
+                _navItem(Icons.person_outline, 'PROFILE', 3),
+              ],
+            ),
+          ),
+          // Habit drop button — top-right corner of nav bar
+          Positioned(
+            top: -22,
+            right: 12,
+            child: const HabitFabButton(),
+          ),
+        ],
       ),
     );
   }
