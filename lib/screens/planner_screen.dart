@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as fb_storage;
+import 'dart:io';
 import '../theme.dart';
 import '../providers/providers.dart';
 import '../models/task.dart';
 import 'vision_board_screen.dart';
+import 'task_detail_screen.dart';
 
 class PlannerScreen extends ConsumerStatefulWidget {
   const PlannerScreen({super.key});
@@ -34,6 +38,8 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     bool notification = false;
     TimeOfDay? pickedTime;
     final subtasks = <SubTask>[];
+    File? pickedImage;
+    bool uploadingImage = false;
 
     showModalBottomSheet(
       context: context,
@@ -70,6 +76,14 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                     onTap: () async {
                       final user = ref.read(currentUserProvider).value;
                       if (user == null || titleCtrl.text.trim().isEmpty) return;
+                      String? imageUrl;
+                      if (pickedImage != null) {
+                        setModal(() => uploadingImage = true);
+                        final ref2 = fb_storage.FirebaseStorage.instance
+                            .ref('task_images/${const Uuid().v4()}');
+                        await ref2.putFile(pickedImage!);
+                        imageUrl = await ref2.getDownloadURL();
+                      }
                       final task = Task(
                         id: const Uuid().v4(),
                         title: titleCtrl.text.trim(),
@@ -88,6 +102,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                         notification: notification,
                         repeat: repeat,
                         subtasks: subtasks,
+                        imageUrl: imageUrl,
                       );
                       await ref.read(taskServiceProvider).addTask(user.uid, user.partnerId, task);
                       if (mounted) Navigator.pop(ctx);
@@ -113,6 +128,51 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                     const Text('Add all details',
                         style: TextStyle(color: textSecondary, fontSize: 13)),
                     const SizedBox(height: 20),
+
+                    // ── Image picker
+                    GestureDetector(
+                      onTap: () async {
+                        final img = await ImagePicker().pickImage(
+                            source: ImageSource.gallery, imageQuality: 80);
+                        if (img != null) setModal(() => pickedImage = File(img.path));
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          height: 160,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white.withOpacity(0.12)),
+                          ),
+                          child: pickedImage != null
+                              ? Stack(fit: StackFit.expand, children: [
+                                  Image.file(pickedImage!, fit: BoxFit.cover),
+                                  Positioned(
+                                    top: 8, right: 8,
+                                    child: GestureDetector(
+                                      onTap: () => setModal(() => pickedImage = null),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                            color: Colors.black54, shape: BoxShape.circle),
+                                        child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                      ),
+                                    ),
+                                  ),
+                                ])
+                              : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                  Icon(Icons.add_photo_alternate_outlined,
+                                      color: textSecondary.withOpacity(0.6), size: 36),
+                                  const SizedBox(height: 8),
+                                  const Text('Add cover image (optional)',
+                                      style: TextStyle(color: textSecondary, fontSize: 13)),
+                                ]),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
                     // Title + Description card
                     _section(Column(children: [
