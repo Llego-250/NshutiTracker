@@ -21,10 +21,17 @@ class UserService {
         .limit(1)
         .get();
 
-    if (query.docs.isEmpty) throw Exception('No user found with that email.');
+    if (query.docs.isEmpty) throw Exception('This email is not registered on NshutiTrack. Ask your partner to sign up first.');
 
     final partnerDoc = query.docs.first;
     final partnerId = partnerDoc.id;
+
+    if (partnerId == myUid) throw Exception('You cannot connect with yourself.');
+
+    final partnerData = partnerDoc.data();
+    if (partnerData['partnerId'] != null && partnerData['partnerId'] != myUid) {
+      throw Exception('This person is already bonded with someone else.');
+    }
     final partnerName = (partnerDoc.data())['name'] ?? partnerEmail;
     final since = DateTime.now().toIso8601String().substring(0, 10);
 
