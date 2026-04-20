@@ -4,6 +4,7 @@ import '../theme.dart';
 import '../providers/providers.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
+import '../models/habit_log.dart';
 import 'auth_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
