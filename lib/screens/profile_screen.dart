@@ -234,6 +234,66 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  Widget _habitSettingsCard(BuildContext context, WidgetRef ref, String uid, String habitType, int goal) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(16)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Daily Habit Tracker',
+            style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 4),
+        const Text('Choose your shared daily habit icon',
+            style: TextStyle(color: textSecondary, fontSize: 12)),
+        const SizedBox(height: 16),
+
+        // Icon picker
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: habitIcons.entries.map((e) {
+            final selected = e.key == habitType;
+            return GestureDetector(
+              onTap: () => ref.read(habitServiceProvider).updateSettings(uid, e.key, goal),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: selected ? accentPurple.withOpacity(0.2) : bgCard2,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: selected ? accentPurple : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Text(e.value, style: const TextStyle(fontSize: 20)),
+                ]),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 16),
+
+        // Goal slider
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          const Text('Daily Goal', style: TextStyle(color: textSecondary)),
+          Text('$goal times', style: const TextStyle(color: accentPurple, fontWeight: FontWeight.bold)),
+        ]),
+        Slider(
+          value: goal.toDouble(),
+          min: 1,
+          max: 12,
+          divisions: 11,
+          activeColor: accentPurple,
+          inactiveColor: bgCard2,
+          label: '$goal',
+          onChanged: (v) => ref.read(habitServiceProvider).updateSettings(uid, habitType, v.round()),
+        ),
+      ]),
+    );
+  }
+
   Widget _levelRow(String label, double val, Color color, String level) => Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text(label, style: const TextStyle(color: textSecondary, fontSize: 11)),
