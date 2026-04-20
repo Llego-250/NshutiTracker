@@ -148,6 +148,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
+                // Habit tracker settings
+                _habitSettingsCard(context, ref, user.uid, user.habitType, user.habitGoal),
+                const SizedBox(height: 16),
+
                 // Sanctuary style
                 Container(
                   padding: const EdgeInsets.all(16),
