@@ -26,6 +26,7 @@ class Task {
   final bool notification;
   final String repeat;   // None Daily Weekly Monthly
   final List<SubTask> subtasks;
+  final String? imageUrl;
 
   const Task({
     required this.id,
@@ -43,6 +44,7 @@ class Task {
     this.notification = false,
     this.repeat = 'None',
     this.subtasks = const [],
+    this.imageUrl,
   });
 
   factory Task.fromDoc(DocumentSnapshot doc) {
@@ -65,6 +67,7 @@ class Task {
       subtasks: (d['subtasks'] as List<dynamic>? ?? [])
           .map((e) => SubTask.fromMap(e as Map<String, dynamic>))
           .toList(),
+      imageUrl: d['imageUrl'],
     );
   }
 
@@ -83,6 +86,7 @@ class Task {
         'notification': notification,
         'repeat': repeat,
         'subtasks': subtasks.map((s) => s.toMap()).toList(),
+        'imageUrl': imageUrl,
       };
 
   Task copyWith({bool? done}) => Task(
@@ -101,5 +105,6 @@ class Task {
         notification: notification,
         repeat: repeat,
         subtasks: subtasks,
+        imageUrl: imageUrl,
       );
 }
