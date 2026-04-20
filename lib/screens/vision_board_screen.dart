@@ -12,7 +12,7 @@ class VisionBoardScreen extends ConsumerStatefulWidget {
 }
 
 class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
-  int _viewMode = 0; // 0=list 1=large 2=small
+  int _viewMode = 2; // 0=list 1=large 2=small
 
   @override
   Widget build(BuildContext context) {
