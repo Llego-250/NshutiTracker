@@ -5,11 +5,17 @@ import '../theme.dart';
 import '../providers/providers.dart';
 import '../models/vision_item.dart';
 
-class VisionBoardScreen extends ConsumerWidget {
+class VisionBoardScreen extends ConsumerStatefulWidget {
   const VisionBoardScreen({super.key});
+  @override
+  ConsumerState<VisionBoardScreen> createState() => _VisionBoardScreenState();
+}
+
+class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
+  int _viewMode = 0; // 0=list 1=large 2=small
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final itemsAsync = ref.watch(visionProvider);
     final user = ref.watch(currentUserProvider).value;
 
@@ -17,73 +23,159 @@ class VisionBoardScreen extends ConsumerWidget {
       backgroundColor: bgDark,
       body: SafeArea(
         child: Stack(children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Our Shared',
-                  style: TextStyle(color: textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
-              ShaderMask(
-                shaderCallback: (b) => btnGradient.createShader(b),
-                child: const Text('Ethereal Bond',
-                    style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 8),
-              const Text('A curated space for our mutual dreams, whispers, and milestones.',
-                  style: TextStyle(color: textSecondary, fontSize: 13)),
-              const SizedBox(height: 24),
-              itemsAsync.when(
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Our Shared',
+                    style: TextStyle(color: textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
+                ShaderMask(
+                  shaderCallback: (b) => btnGradient.createShader(b),
+                  child: const Text('Ethereal Bond',
+                      style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 8),
+                const Text('A curated space for our mutual dreams, whispers, and milestones.',
+                    style: TextStyle(color: textSecondary, fontSize: 13)),
+                const SizedBox(height: 16),
+                Row(children: [
+                  const Text('Dreams', style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const Spacer(),
+                  _viewToggle(),
+                ]),
+                const SizedBox(height: 12),
+              ]),
+            ),
+            Expanded(
+              child: itemsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator(color: accentPurple)),
                 error: (e, _) => Center(child: Text('$e', style: const TextStyle(color: accentPink))),
                 data: (items) {
                   if (items.isEmpty) {
                     return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Text('No vision items yet.\nTap + to add your first dream!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: textSecondary, fontSize: 14)),
-                      ),
+                      child: Text('No vision items yet.\nTap + to add your first dream!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: textSecondary, fontSize: 14)),
                     );
                   }
-                  // Split into two columns
-                  final left = items.indexed.where((e) => e.$1.isEven).map((e) => e.$2).toList();
-                  final right = items.indexed.where((e) => e.$1.isOdd).map((e) => e.$2).toList();
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: Column(children: left.map((item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _itemCard(item, user?.uid ?? ''),
-                      )).toList())),
-                      const SizedBox(width: 12),
-                      Expanded(child: Column(children: right.map((item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _itemCard(item, user?.uid ?? ''),
-                      )).toList())),
-                    ],
+                  if (_viewMode == 0) {
+                    // List view
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      itemCount: items.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (_, i) => _itemCard(items[i], user?.uid ?? ''),
+                    );
+                  }
+                  // Grid view (large=2col, small=3col)
+                  return GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _viewMode == 2 ? 3 : 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: _viewMode == 2 ? 0.8 : 0.9,
+                    ),
+                    itemCount: items.length,
+                    itemBuilder: (_, i) => _itemGridCard(items[i], large: _viewMode == 1),
                   );
                 },
               ),
-            ]),
-          ),
+            ),
+          ]),
           Positioned(
             bottom: 20, right: 20,
-            child: Column(children: [
-              _fab(Icons.add, accentPurple, () => _showAddItem(context, ref, user)),
-            ]),
+            child: GestureDetector(
+              onTap: () => _showAddItem(context, ref, user),
+              child: Container(
+                width: 48, height: 48,
+                decoration: const BoxDecoration(color: accentPurple, shape: BoxShape.circle),
+                child: const Icon(Icons.add, color: Colors.white, size: 22),
+              ),
+            ),
           ),
         ]),
       ),
     );
   }
 
-  Widget _fab(IconData icon, Color color, VoidCallback onTap) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 48, height: 48,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          child: Icon(icon, color: Colors.white, size: 22),
+  Widget _viewToggle() {
+    final modes = [
+      (Icons.view_list_rounded, 'List'),
+      (Icons.grid_view_rounded, 'Large'),
+      (Icons.apps_rounded, 'Small'),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: List.generate(3, (i) {
+          final active = _viewMode == i;
+          return GestureDetector(
+            onTap: () => setState(() => _viewMode = i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: active ? accentPurple : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(modes[i].$1, color: active ? Colors.white : textSecondary, size: 18),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _itemGridCard(VisionItem item, {required bool large}) => Container(
+        padding: EdgeInsets.all(large ? 14 : 10),
+        decoration: BoxDecoration(
+          color: bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: item.isPartner ? accentPink.withOpacity(0.25) : Colors.white.withOpacity(0.06)),
         ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (item.isPartner)
+            Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              decoration: BoxDecoration(
+                  color: accentPink.withOpacity(0.2), borderRadius: BorderRadius.circular(6)),
+              child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.favorite, color: accentPink, size: 9),
+                SizedBox(width: 2),
+                Text('PARTNER', style: TextStyle(color: accentPink, fontSize: 8)),
+              ]),
+            ),
+          Text(item.title,
+              maxLines: large ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: textPrimary, fontWeight: FontWeight.bold, fontSize: large ? 13 : 11)),
+          if (large && item.description.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(item.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: textSecondary, fontSize: 10)),
+          ],
+          const Spacer(),
+          Text(item.type.toUpperCase(),
+              style: TextStyle(color: textSecondary, fontSize: large ? 9 : 8, letterSpacing: 1)),
+          if (item.progress != null) ...[
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: item.progress!.clamp(0.0, 1.0),
+                backgroundColor: bgCard2,
+                valueColor: const AlwaysStoppedAnimation(accentPurple),
+                minHeight: 3,
+              ),
+            ),
+          ],
+        ]),
       );
 
   Widget _itemCard(VisionItem item, String myUid) => Container(
@@ -210,13 +302,13 @@ class VisionBoardScreen extends ConsumerWidget {
     );
   }
 
-  static Widget _inputField(TextEditingController ctrl, String hint) => TextField(
+  Widget _inputField(TextEditingController ctrl, String hint) => TextField(
         controller: ctrl,
         style: const TextStyle(color: textPrimary),
         decoration: _deco(hint),
       );
 
-  static InputDecoration _deco(String hint) => InputDecoration(
+  InputDecoration _deco(String hint) => InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: textSecondary),
         filled: true,
