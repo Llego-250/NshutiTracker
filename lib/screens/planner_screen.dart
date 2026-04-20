@@ -667,7 +667,10 @@ Widget _tabBtn(String label, int idx) {
         if (user == null) return;
         await ref.read(taskServiceProvider).deleteTask(user.uid, user.partnerId, task.id);
       },
-      child: Container(
+      child: GestureDetector(
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task))),
+        child: Container(
         padding: EdgeInsets.all(large ? 14 : 10),
         decoration: BoxDecoration(
           color: bgCard,
@@ -724,6 +727,7 @@ Widget _tabBtn(String label, int idx) {
           Text(task.time,
               style: TextStyle(color: textSecondary, fontSize: large ? 11 : 10)),
         ]),
+        ),
       ),
     );
   }
@@ -750,7 +754,10 @@ Widget _tabBtn(String label, int idx) {
         if (user == null) return;
         await ref.read(taskServiceProvider).deleteTask(user.uid, user.partnerId, task.id);
       },
-      child: Container(
+      child: GestureDetector(
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => TaskDetailScreen(task: task))),
+        child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: bgCard,
@@ -816,6 +823,7 @@ Widget _tabBtn(String label, int idx) {
             ]),
           ],
         ]),
+        ),
       ),
     );
   }
