@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../providers/providers.dart';
-import 'chat_screen.dart';
+import 'widgets/habit_tracker_widget.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -14,22 +14,6 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: bgDark,
-      floatingActionButton: FloatingActionButton(
-        mini: true,
-        backgroundColor: accentPink,
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          backgroundColor: bgCard,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-          builder: (_) => SizedBox(
-            height: MediaQuery.of(context).size.height * 0.9,
-            child: const ChatScreen(),
-          ),
-        ),
-        child: const Icon(Icons.chat_bubble, color: Colors.white, size: 18),
-      ),
       body: SafeArea(
         child: userAsync.when(
           loading: () => const Center(child: CircularProgressIndicator(color: accentPurple)),
@@ -128,6 +112,10 @@ class DashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     _statCard('$done', 'DONE', Icons.check_circle_outline, accentBlue),
                   ]),
+                  const SizedBox(height: 20),
+
+                  // Habit tracker
+                  const HabitTrackerWidget(),
                   const SizedBox(height: 20),
 
                   // Progress
