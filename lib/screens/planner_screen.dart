@@ -19,7 +19,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _calendarMonth = DateTime.now();
   bool _showCalendar = false;
-  int _viewMode = 0; // 0=list 1=large 2=small
+  int _viewMode = 2; // 0=list 1=large 2=small
 
   // ── Add task sheet ──────────────────────────────────────────────────────────
   void _showAddTask() {
