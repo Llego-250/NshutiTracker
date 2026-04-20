@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -370,16 +371,20 @@ class _LiquidGlassCalendar extends StatelessWidget {
     final years = List.generate(11, (i) => DateTime.now().year - 5 + i);
     final days = _buildDays();
 
-    return Container(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withOpacity(0.18)),
         boxShadow: [
           BoxShadow(
-            color: accentBlue.withOpacity(0.08),
+            color: accentBlue.withOpacity(0.10),
             blurRadius: 24,
             spreadRadius: 2,
           ),
@@ -495,6 +500,8 @@ class _LiquidGlassCalendar extends StatelessWidget {
           );
         }),
       ]),
+        ),
+      ),
     );
   }
 
