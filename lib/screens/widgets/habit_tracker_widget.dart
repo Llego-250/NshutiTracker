@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../theme.dart';
-import '../providers/providers.dart';
-import '../models/habit_log.dart';
+import '../../theme.dart';
+import '../../providers/providers.dart';
+import '../../models/habit_log.dart';
 
 class HabitTrackerWidget extends ConsumerWidget {
   const HabitTrackerWidget({super.key});
