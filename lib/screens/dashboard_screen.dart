@@ -2,13 +2,114 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../providers/providers.dart';
+import '../services/user_service.dart';
 import 'widgets/habit_tracker_widget.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
+  @override
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+
+  void _showConnectPartner(BuildContext context, String uid) {
+    final emailCtrl = TextEditingController();
+    bool loading = false;
+    String? error;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: bgCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModal) => Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 24, right: 24, top: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(color: bgCard2, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text('Connect Your Partner',
+                  style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              const Text('Enter your partner\'s email address to link your bond.',
+                  style: TextStyle(color: textSecondary, fontSize: 13)),
+              const SizedBox(height: 24),
+              TextField(
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'partner@email.com',
+                  hintStyle: const TextStyle(color: textSecondary),
+                  prefixIcon: const Icon(Icons.email_outlined, color: textSecondary, size: 18),
+                  filled: true,
+                  fillColor: bgCard2,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 10),
+                Text(error!, style: const TextStyle(color: accentPink, fontSize: 12)),
+              ],
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                      gradient: btnGradient,
+                      borderRadius: BorderRadius.circular(14)),
+                  child: TextButton(
+                    onPressed: loading
+                        ? null
+                        : () async {
+                            final email = emailCtrl.text.trim();
+                            if (email.isEmpty) {
+                              setModal(() => error = 'Please enter an email.');
+                              return;
+                            }
+                            setModal(() { loading = true; error = null; });
+                            try {
+                              await ref.read(userServiceProvider).connectPartner(uid, email);
+                              if (ctx.mounted) Navigator.pop(ctx);
+                            } catch (e) {
+                              setModal(() {
+                                loading = false;
+                                error = e.toString().replaceAll('Exception: ', '');
+                              });
+                            }
+                          },
+                    child: loading
+                        ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                        : const Text('Connect 💖',
+                            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserProvider);
     final tasksAsync = ref.watch(tasksProvider);
 
@@ -59,25 +160,28 @@ class DashboardScreen extends ConsumerWidget {
 
                   // Connect partner card
                   if (user.partnerId == null)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(16)),
-                      child: Row(children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(color: bgCard2, borderRadius: BorderRadius.circular(12)),
-                          child: const Icon(Icons.person_add, color: accentPurple, size: 22),
-                        ),
-                        const SizedBox(width: 14),
-                        const Expanded(child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Connect Your Partner', style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold)),
-                            Text('Shared goals are within reach', style: TextStyle(color: textSecondary, fontSize: 12)),
-                          ],
-                        )),
-                        const Icon(Icons.chevron_right, color: textSecondary),
-                      ]),
+                    GestureDetector(
+                      onTap: () => _showConnectPartner(context, user.uid),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(16)),
+                        child: Row(children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(color: bgCard2, borderRadius: BorderRadius.circular(12)),
+                            child: const Icon(Icons.person_add, color: accentPurple, size: 22),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Connect Your Partner', style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold)),
+                              Text('Shared goals are within reach', style: TextStyle(color: textSecondary, fontSize: 12)),
+                            ],
+                          )),
+                          const Icon(Icons.chevron_right, color: textSecondary),
+                        ]),
+                      ),
                     )
                   else
                     Container(
