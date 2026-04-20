@@ -43,7 +43,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         child: Container(
           width: 56, height: 56,
           decoration: const BoxDecoration(gradient: btnGradient, shape: BoxShape.circle),
-          child: const Icon(Icons.add, color: Colors.white, size: 28),
+          child: const Icon(Icons.chat_bubble, color: Colors.white, size: 26),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -59,7 +59,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             _navItem(Icons.home_outlined, 'HOME', 0),
             _navItem(Icons.calendar_today_outlined, 'PLANNER', 1),
             const SizedBox(width: 56),
-            _navItem(Icons.search, 'FIND', 2),
+            _navItem(Icons.location_on_outlined, 'FIND', 2),
             _navItem(Icons.person_outline, 'PROFILE', 3),
           ],
         ),
@@ -72,7 +72,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     return GestureDetector(
       onTap: () => setState(() => _idx = idx),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, color: active ? accentPurple : textSecondary, size: 22),
+        Icon(active && idx == 2 ? Icons.location_on : icon, color: active ? accentPurple : textSecondary, size: 22),
         const SizedBox(height: 2),
         Text(label,
             style: TextStyle(
