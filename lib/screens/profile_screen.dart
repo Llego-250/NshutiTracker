@@ -191,7 +191,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           await ref.read(userServiceProvider)
                               .updateUser(user.uid, {'nocturnalMode': v});
                         },
-                        activeColor: accentPurple,
+                        activeThumbColor: accentPurple,
                       ),
                     ]),
                   ]),
