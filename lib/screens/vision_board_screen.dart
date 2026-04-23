@@ -63,7 +63,7 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
                     return ListView.separated(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (_, i) => _itemCard(items[i], user?.uid ?? ''),
                     );
                   }
@@ -252,7 +252,7 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
             _inputField(descCtrl, 'Description'),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
-              value: type,
+              initialValue: type,
               dropdownColor: bgCard2,
               style: const TextStyle(color: textPrimary),
               decoration: _deco('Type'),
