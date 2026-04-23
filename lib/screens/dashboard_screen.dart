@@ -215,7 +215,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   Row(children: [
                     _statCard('$todo', 'TO DO', Icons.list_alt, accentPurple),
                     const SizedBox(width: 12),
-                    _statCard('${tasks.where((t) => !t.done && t.tag == "PARTNER\'S").length}',
+                    _statCard('${tasks.where((t) => !t.done && t.tag == "PARTNER'S").length}',
                         'PENDING', Icons.pending_actions, accentPink),
                     const SizedBox(width: 12),
                     _statCard('$done', 'DONE', Icons.check_circle_outline, accentBlue),
