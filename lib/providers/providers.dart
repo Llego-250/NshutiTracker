@@ -37,7 +37,7 @@ final currentUserProvider = StreamProvider<AppUser?>((ref) {
       return ref.watch(userServiceProvider).watchUser(user.uid);
     },
     loading: () => Stream.value(null),
-    error: (_, __) => Stream.value(null),
+    error: (_, _) => Stream.value(null),
   );
 });
 
