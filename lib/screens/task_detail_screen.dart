@@ -127,7 +127,7 @@ class TaskDetailScreen extends ConsumerWidget {
                 Row(children: [
                   Expanded(child: _infoBox(
                     'Start Date',
-                    '${DateFormat('MMM d, hh:mm a').format(task.createdAt)}',
+                    DateFormat('MMM d, hh:mm a').format(task.createdAt),
                     Icons.access_time,
                   )),
                   const SizedBox(width: 12),
