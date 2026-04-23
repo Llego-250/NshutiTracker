@@ -78,7 +78,7 @@ class _HabitFabButtonState extends ConsumerState<HabitFabButton>
                 // Pulsing drop shape
                 AnimatedBuilder(
                   animation: _pulseCtrl,
-                  builder: (_, __) {
+                  builder: (_, _) {
                     final pulse = 1.0 + _pulseCtrl.value * 0.07;
                     return Transform.scale(
                       scale: pulse,
