@@ -22,7 +22,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   int _tab = 0; // 0=Daily 1=Weekly 2=Calendar
   DateTime _selectedDate = DateTime.now();
   DateTime _calendarMonth = DateTime.now();
-  bool _showCalendar = false;
+  final bool _showCalendar = false;
   int _viewMode = 2; // 0=list 1=large 2=small
 
   // ── Add task sheet ──────────────────────────────────────────────────────────
@@ -270,7 +270,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                           Switch(
                             value: notification,
                             onChanged: (v) => setModal(() => notification = v),
-                            activeColor: accentPurple,
+                            activeThumbColor: accentPurple,
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           )),
                       _divider(),
@@ -530,7 +530,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                     return ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       itemCount: tasks.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (_, i) => _taskCard(tasks[i], user?.uid ?? ''),
                     );
                   }
