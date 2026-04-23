@@ -38,7 +38,7 @@ class NshutiTrackApp extends ConsumerWidget {
       home: auth.when(
         data: (user) => user != null ? const MainShell() : const AuthScreen(),
         loading: () => const _Splash(),
-        error: (_, __) => const AuthScreen(),
+        error: (_, _) => const AuthScreen(),
       ),
     );
   }
