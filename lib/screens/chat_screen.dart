@@ -342,10 +342,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         const SizedBox(height: 24),
         myMoodsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator(color: accentPurple)),
-          error: (_, __) => const SizedBox(),
+          error: (_, _) => const SizedBox(),
           data: (myMoods) => partnerMoodsAsync.when(
             loading: () => const SizedBox(),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
             data: (partnerMoods) {
               final positiveSync = myMoods.isEmpty
                   ? 0.0
