@@ -12,6 +12,9 @@ class TaskDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the live task list so edits made here (or anywhere else) show up at once.
+    final task = ref.watch(tasksProvider).value?.where((t) => t.id == this.task.id).firstOrNull ??
+        this.task;
     final priorityColor = task.priority == 'High'
         ? accentPink
         : task.priority == 'Medium'
@@ -49,7 +52,9 @@ class TaskDetailScreen extends ConsumerWidget {
               ),
             ),
             actions: [
-              Padding(
+              GestureDetector(
+                onTap: () => _confirmDelete(context, ref, task),
+                child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(50),
@@ -61,10 +66,11 @@ class TaskDetailScreen extends ConsumerWidget {
                         color: Colors.white.withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
+                      child: const Icon(Icons.delete_outline, color: Colors.white, size: 20),
                     ),
                   ),
                 ),
+              ),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -198,13 +204,51 @@ class TaskDetailScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              onPressed: () {},
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                backgroundColor: bgCard,
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                builder: (_) => EditTaskSheet(task: task),
+              ),
               child: const Text('Edit Task',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
         ),
       ]),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, Task task) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: bgCard,
+        title: const Text('Delete task?', style: TextStyle(color: textPrimary)),
+        content: Text(
+          '"${task.title}" will be removed permanently.',
+          style: const TextStyle(color: textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel', style: TextStyle(color: textSecondary)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final user = ref.read(currentUserProvider).value;
+              if (user == null) return;
+              await ref.read(taskServiceProvider).deleteTask(user.uid, task.id);
+              if (dialogCtx.mounted) Navigator.pop(dialogCtx); // close dialog
+              if (context.mounted)
+                Navigator.pop(context); // leave detail screen
+            },
+            child: const Text('Delete', style: TextStyle(color: accentPink)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -273,4 +317,201 @@ class TaskDetailScreen extends ConsumerWidget {
           ),
         ]),
       );
+}
+
+// ── Edit task sheet ───────────────────────────────────────────────────────────
+class EditTaskSheet extends ConsumerStatefulWidget {
+  final Task task;
+  const EditTaskSheet({super.key, required this.task});
+  @override
+  ConsumerState<EditTaskSheet> createState() => _EditTaskSheetState();
+}
+
+class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
+  static const _categories = ['PERSONAL', 'WORK', 'HEALTH'];
+  static const _priorities = ['High', 'Medium', 'Low', 'None'];
+
+  late final _titleCtrl = TextEditingController(text: widget.task.title);
+  late final _descCtrl = TextEditingController(text: widget.task.description);
+  late final _locationCtrl = TextEditingController(
+    text: widget.task.location ?? '',
+  );
+  late String _tag = _categories.contains(widget.task.tag)
+      ? widget.task.tag
+      : 'PERSONAL';
+  late String _priority = _priorities.contains(widget.task.priority)
+      ? widget.task.priority
+      : 'None';
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _descCtrl.dispose();
+    _locationCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final title = _titleCtrl.text.trim();
+    if (title.isEmpty) {
+      setState(() => _error = 'Title cannot be empty.');
+      return;
+    }
+    final user = ref.read(currentUserProvider).value;
+    if (user == null) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final location = _locationCtrl.text.trim();
+      await ref.read(taskServiceProvider).updateTask(user.uid, widget.task.id, {
+        'title': title,
+        'description': _descCtrl.text.trim(),
+        'location': location.isEmpty ? null : location,
+        'tag': _tag,
+        'priority': _priority,
+      });
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      setState(() {
+        _saving = false;
+        _error = '$e';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 20,
+        right: 20,
+        top: 20,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Edit Task',
+              style: TextStyle(
+                color: textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _field(_titleCtrl, 'Title'),
+            const SizedBox(height: 10),
+            _field(_descCtrl, 'Description', maxLines: 3),
+            const SizedBox(height: 10),
+            _field(_locationCtrl, 'Location (optional)'),
+            const SizedBox(height: 16),
+            const Text(
+              'Category',
+              style: TextStyle(color: textSecondary, fontSize: 12),
+            ),
+            const SizedBox(height: 6),
+            _chips(_categories, _tag, (v) => setState(() => _tag = v)),
+            const SizedBox(height: 12),
+            const Text(
+              'Priority',
+              style: TextStyle(color: textSecondary, fontSize: 12),
+            ),
+            const SizedBox(height: 6),
+            _chips(
+              _priorities,
+              _priority,
+              (v) => setState(() => _priority = v),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                _error!,
+                style: const TextStyle(color: accentPink, fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Save Changes',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _field(TextEditingController ctrl, String hint, {int maxLines = 1}) =>
+      TextField(
+        controller: ctrl,
+        maxLines: maxLines,
+        style: const TextStyle(color: textPrimary),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: textSecondary),
+          filled: true,
+          fillColor: bgCard2,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      );
+
+  Widget _chips(
+    List<String> options,
+    String selected,
+    ValueChanged<String> onSelect,
+  ) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: options
+        .map(
+          (o) => ChoiceChip(
+            label: Text(o),
+            selected: o == selected,
+            onSelected: (_) => onSelect(o),
+            selectedColor: accentPurple,
+            backgroundColor: bgCard2,
+            labelStyle: TextStyle(
+              color: o == selected ? Colors.white : textSecondary,
+              fontSize: 12,
+            ),
+            showCheckmark: false,
+          ),
+        )
+        .toList(),
+  );
 }
