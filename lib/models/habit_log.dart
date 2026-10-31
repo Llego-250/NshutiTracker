@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Available habit icons the couple can choose from
+// Available habit icons the user can choose from
 const habitIcons = {
   'water':    '💧',
-  'heart':    '❤️',
+  'journal':  '✍️',
   'food':     '🍎',
   'book':     '📖',
   'exercise': '🏃',
