@@ -4,33 +4,16 @@ import '../models/mood_entry.dart';
 class MoodService {
   final _db = FirebaseFirestore.instance;
 
-  Future<void> addMood(MoodEntry entry) => _db
-      .collection('moods')
-      .doc(entry.userId)
-      .collection('entries')
-      .doc(entry.id)
-      .set(entry.toMap());
+  /// Each user's mood check-ins live in users/{uid}/moods.
+  CollectionReference<Map<String, dynamic>> _moods(String uid) =>
+      _db.collection('users').doc(uid).collection('moods');
 
-  Stream<List<MoodEntry>> watchMoods(String userId, {int days = 14}) {
-    final since = DateTime.now().subtract(Duration(days: days));
-    return _db
-        .collection('moods')
-        .doc(userId)
-        .collection('entries')
-        .where('createdAt', isGreaterThan: Timestamp.fromDate(since))
-        .orderBy('createdAt', descending: false)
-        .snapshots()
-        .map((s) => s.docs.map(MoodEntry.fromDoc).toList());
-  }
+  Future<void> addMood(MoodEntry entry) =>
+      _moods(entry.userId).doc(entry.id).set(entry.toMap());
 
-  /// Watch partner moods (only non-private entries)
-  Stream<List<MoodEntry>> watchPartnerMoods(String partnerId, {int days = 14}) {
+  Stream<List<MoodEntry>> watchMoods(String uid, {int days = 14}) {
     final since = DateTime.now().subtract(Duration(days: days));
-    return _db
-        .collection('moods')
-        .doc(partnerId)
-        .collection('entries')
-        .where('isPrivate', isEqualTo: false)
+    return _moods(uid)
         .where('createdAt', isGreaterThan: Timestamp.fromDate(since))
         .orderBy('createdAt', descending: false)
         .snapshots()
