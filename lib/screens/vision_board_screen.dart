@@ -27,19 +27,19 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Our Shared',
+                const Text('My',
                     style: TextStyle(color: textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
                 ShaderMask(
                   shaderCallback: (b) => btnGradient.createShader(b),
-                  child: const Text('Ethereal Bond',
+                  child: const Text('Vision Board',
                       style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 8),
-                const Text('A curated space for our mutual dreams, whispers, and milestones.',
+                const Text('A space for your goals, quotes, and milestones.',
                     style: TextStyle(color: textSecondary, fontSize: 13)),
                 const SizedBox(height: 16),
                 Row(children: [
-                  const Text('Dreams', style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const Text('Goals', style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
                   const Spacer(),
                   _viewToggle(),
                 ]),
@@ -53,7 +53,7 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
                 data: (items) {
                   if (items.isEmpty) {
                     return const Center(
-                      child: Text('No vision items yet.\nTap + to add your first dream!',
+                      child: Text('No vision items yet.\nTap + to add your first goal!',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: textSecondary, fontSize: 14)),
                     );
@@ -133,21 +133,9 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
         decoration: BoxDecoration(
           color: bgCard,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: item.isPartner ? accentPink.withOpacity(0.25) : Colors.white.withOpacity(0.06)),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (item.isPartner)
-            Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-              decoration: BoxDecoration(
-                  color: accentPink.withOpacity(0.2), borderRadius: BorderRadius.circular(6)),
-              child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.favorite, color: accentPink, size: 9),
-                SizedBox(width: 2),
-                Text('PARTNER', style: TextStyle(color: accentPink, fontSize: 8)),
-              ]),
-            ),
           Text(item.title,
               maxLines: large ? 2 : 1,
               overflow: TextOverflow.ellipsis,
@@ -182,18 +170,6 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(16)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (item.isPartner)
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                  color: accentPink.withOpacity(0.2), borderRadius: BorderRadius.circular(6)),
-              child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.favorite, color: accentPink, size: 10),
-                SizedBox(width: 3),
-                Text('PARTNER', style: TextStyle(color: accentPink, fontSize: 9)),
-              ]),
-            ),
           Text(item.title,
               style: const TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
           if (item.description.isNotEmpty) ...[
@@ -230,7 +206,6 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     String type = 'goal';
-    bool isPartner = false;
 
     showModalBottomSheet(
       context: context,
@@ -261,15 +236,6 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
                   .toList(),
               onChanged: (v) => setModal(() => type = v!),
             ),
-            const SizedBox(height: 10),
-            Row(children: [
-              Checkbox(
-                value: isPartner,
-                onChanged: (v) => setModal(() => isPartner = v!),
-                activeColor: accentPurple,
-              ),
-              const Text('Partner item', style: TextStyle(color: textSecondary)),
-            ]),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -285,11 +251,10 @@ class _VisionBoardScreenState extends ConsumerState<VisionBoardScreen> {
                     title: titleCtrl.text.trim(),
                     description: descCtrl.text.trim(),
                     createdBy: appUser.uid,
-                    isPartner: isPartner,
                     createdAt: DateTime.now(),
                   );
                   await ref.read(visionServiceProvider)
-                      .addItem(appUser.uid, appUser.partnerId, item);
+                      .addItem(appUser.uid, item);
                   if (context.mounted) Navigator.pop(ctx);
                 },
                 child: const Text('Add', style: TextStyle(color: Colors.white)),
