@@ -62,7 +62,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 Container(
                   width: 72, height: 72,
                   decoration: BoxDecoration(color: bgCard2, borderRadius: BorderRadius.circular(20)),
-                  child: const Icon(Icons.favorite, color: accentPink, size: 36),
+                  child: const Icon(Icons.task_alt, color: accentPurple, size: 36),
                 ),
                 const SizedBox(height: 20),
                 ShaderMask(
@@ -80,7 +80,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 const SizedBox(height: 20),
                 _label('EMAIL ADDRESS'),
                 const SizedBox(height: 8),
-                _field(controller: _emailCtrl, hint: 'hello@nshuti.love', icon: Icons.email_outlined),
+                _field(controller: _emailCtrl, hint: 'you@example.com', icon: Icons.email_outlined),
                 const SizedBox(height: 20),
                 _label('PASSWORD'),
                 const SizedBox(height: 8),
