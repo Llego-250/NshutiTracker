@@ -4,29 +4,24 @@ import '../models/habit_log.dart';
 class HabitService {
   final _db = FirebaseFirestore.instance;
 
-  String _todayId(String userId) {
+  /// Each user's daily habit logs live in users/{uid}/habits/{yyyy-m-d}.
+  DocumentReference<Map<String, dynamic>> _todayDoc(String userId) {
     final now = DateTime.now();
-    return '${userId}_${now.year}-${now.month}-${now.day}';
+    return _db
+        .collection('users')
+        .doc(userId)
+        .collection('habits')
+        .doc('${now.year}-${now.month}-${now.day}');
   }
 
   /// Watch today's habit log for a user
-  Stream<HabitLog?> watchTodayLog(String userId) {
-    final docId = _todayId(userId);
-    return _db
-        .collection('habits')
-        .doc(docId)
-        .snapshots()
-        .map((s) => s.exists ? HabitLog.fromDoc(s) : null);
-  }
-
-  /// Watch partner's today log (read-only)
-  Stream<HabitLog?> watchPartnerLog(String partnerId) =>
-      watchTodayLog(partnerId);
+  Stream<HabitLog?> watchTodayLog(String userId) => _todayDoc(userId)
+      .snapshots()
+      .map((s) => s.exists ? HabitLog.fromDoc(s) : null);
 
   /// Tap the habit — increments count, enforces 5h cooldown
   Future<String> tap(String userId, String habitType, int goal) async {
-    final docId = _todayId(userId);
-    final ref = _db.collection('habits').doc(docId);
+    final ref = _todayDoc(userId);
     final snap = await ref.get();
 
     final now = DateTime.now();
@@ -49,7 +44,7 @@ class HabitService {
     } else {
       // First tap of the day
       final log = HabitLog(
-        id: docId,
+        id: ref.id,
         userId: userId,
         habitType: habitType,
         count: 1,
