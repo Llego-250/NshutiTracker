@@ -9,7 +9,6 @@ import 'dart:io';
 import '../theme.dart';
 import '../providers/providers.dart';
 import '../models/task.dart';
-import 'vision_board_screen.dart';
 import 'task_detail_screen.dart';
 
 class PlannerScreen extends ConsumerStatefulWidget {
@@ -104,7 +103,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                         subtasks: subtasks,
                         imageUrl: imageUrl,
                       );
-                      await ref.read(taskServiceProvider).addTask(user.uid, user.partnerId, task);
+                      await ref.read(taskServiceProvider).addTask(user.uid, task);
                       if (mounted) Navigator.pop(ctx);
                     },
                     child: Container(
@@ -299,7 +298,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                       _divider(),
                       GestureDetector(
                         onTap: () async {
-                          final opts = ['PERSONAL', "PARTNER'S", 'CONNECTION GOAL'];
+                          final opts = ['PERSONAL', 'WORK', 'HEALTH'];
                           final picked = await showModalBottomSheet<String>(
                             context: ctx,
                             backgroundColor: bgCard,
@@ -459,7 +458,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('Daily Planner',
                     style: TextStyle(color: textPrimary, fontSize: 28, fontWeight: FontWeight.bold)),
-                const Text('STRENGTHENING CONNECTIONS TODAY',
+                const Text('STAY ON TOP OF YOUR DAY',
                     style: TextStyle(color: textSecondary, fontSize: 10, letterSpacing: 1.5)),
                 const SizedBox(height: 16),
                 Row(children: [
@@ -468,21 +467,6 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                   _tabBtn('Weekly', 1),
                   const SizedBox(width: 8),
                   _tabBtn('Calendar', 2),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const VisionBoardScreen())),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(10)),
-                      child: const Row(children: [
-                        Icon(Icons.copy, color: textSecondary, size: 14),
-                        SizedBox(width: 4),
-                        Text('VISION\nBOARD',
-                            style: TextStyle(color: textPrimary, fontSize: 9, fontWeight: FontWeight.bold)),
-                      ]),
-                    ),
-                  ),
                 ]),
               ]),
             ),
@@ -647,9 +631,9 @@ Widget _tabBtn(String label, int idx) {
   }
 
   Widget _taskGridCard(Task task, String myUid, {required bool large}) {
-    final color = task.tag == 'CONNECTION GOAL'
+    final color = task.tag == 'HEALTH'
         ? accentPink
-        : task.tag == "PARTNER'S"
+        : task.tag == 'WORK'
             ? accentPurple
             : Colors.green;
     return Dismissible(
@@ -665,7 +649,7 @@ Widget _tabBtn(String label, int idx) {
       onDismissed: (_) async {
         final user = ref.read(currentUserProvider).value;
         if (user == null) return;
-        await ref.read(taskServiceProvider).deleteTask(user.uid, user.partnerId, task.id);
+        await ref.read(taskServiceProvider).deleteTask(user.uid, task.id);
       },
       child: GestureDetector(
         onTap: () => Navigator.push(context,
@@ -691,7 +675,7 @@ Widget _tabBtn(String label, int idx) {
                 final user = ref.read(currentUserProvider).value;
                 if (user == null) return;
                 await ref.read(taskServiceProvider)
-                    .toggleTask(user.uid, user.partnerId, task.id, !task.done);
+                    .toggleTask(user.uid, task.id, !task.done);
               },
               child: Container(
                 width: 18, height: 18,
@@ -733,9 +717,9 @@ Widget _tabBtn(String label, int idx) {
   }
 
   Widget _taskCard(Task task, String myUid) {
-    final color = task.tag == 'CONNECTION GOAL'
+    final color = task.tag == 'HEALTH'
         ? accentPink
-        : task.tag == "PARTNER'S"
+        : task.tag == 'WORK'
             ? accentPurple
             : Colors.green;
 
@@ -752,7 +736,7 @@ Widget _tabBtn(String label, int idx) {
       onDismissed: (_) async {
         final user = ref.read(currentUserProvider).value;
         if (user == null) return;
-        await ref.read(taskServiceProvider).deleteTask(user.uid, user.partnerId, task.id);
+        await ref.read(taskServiceProvider).deleteTask(user.uid, task.id);
       },
       child: GestureDetector(
         onTap: () => Navigator.push(context,
@@ -786,7 +770,7 @@ Widget _tabBtn(String label, int idx) {
                 final user = ref.read(currentUserProvider).value;
                 if (user == null) return;
                 await ref.read(taskServiceProvider)
-                    .toggleTask(user.uid, user.partnerId, task.id, !task.done);
+                    .toggleTask(user.uid, task.id, !task.done);
               },
               child: Container(
                 width: 22, height: 22,
@@ -813,15 +797,6 @@ Widget _tabBtn(String label, int idx) {
               ],
             ])),
           ]),
-          if (task.addedByName != null && task.createdBy != myUid) ...[
-            const SizedBox(height: 10),
-            Row(children: [
-              const CircleAvatar(radius: 10, backgroundColor: accentPink),
-              const SizedBox(width: 6),
-              Text('${task.addedByName!.toUpperCase()} ADDED THIS',
-                  style: const TextStyle(color: accentPurple, fontSize: 11, fontWeight: FontWeight.bold)),
-            ]),
-          ],
         ]),
         ),
       ),
