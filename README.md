@@ -1,17 +1,9 @@
-# todo
+# NshutiTrack
 
-A new Flutter project.
+NshutiTrack is a personal planner for daily tasks, habits, moods and a vision board. It signs users in with Firebase Authentication, and each user's data is saved in Cloud Firestore under their own id, so two accounts never see each other's data, and every change appears live.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Screenshots
+![Login](screenshots/login.png)
+![My data in Firestore](screenshots/console.png)
+![Live update](screenshots/live.png)
+![Second account sees nothing of mine](screenshots/denied.png)
