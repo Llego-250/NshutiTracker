@@ -69,7 +69,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 Container(
                   width: 72, height: 72,
                   decoration: BoxDecoration(color: bgCard2, borderRadius: BorderRadius.circular(20)),
-                  child: const Icon(Icons.favorite, color: accentPink, size: 36),
+                  child: const Icon(Icons.task_alt, color: accentPurple, size: 36),
                 ),
                 const SizedBox(height: 20),
                 ShaderMask(
@@ -78,12 +78,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
                 const SizedBox(height: 6),
-                const Text('RECONNECT. TOGETHER.',
+                const Text('PLAN. TRACK. GROW.',
                     style: TextStyle(color: textSecondary, letterSpacing: 2, fontSize: 12)),
                 const SizedBox(height: 40),
                 _label('EMAIL ADDRESS'),
                 const SizedBox(height: 8),
-                _field(controller: _emailCtrl, hint: 'hello@nshuti.love', icon: Icons.email_outlined),
+                _field(controller: _emailCtrl, hint: 'you@example.com', icon: Icons.email_outlined),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -122,7 +122,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     alignment: Alignment.center,
                     child: _loading
                         ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                        : const Text('Sign In to Bond',
+                        : const Text('Sign In',
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
                   ),
@@ -137,12 +137,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       Text('Create Account', style: TextStyle(color: accentPurple, fontWeight: FontWeight.bold)),
                     ],
                   ),
-                ),
-                const SizedBox(height: 40),
-                const Text(
-                  '"where technology meets the heartbeat of your most cherished relationships."',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: textSecondary, fontSize: 11, fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 32),
               ],
