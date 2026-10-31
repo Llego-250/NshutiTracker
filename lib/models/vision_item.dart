@@ -10,7 +10,6 @@ class VisionItem {
   final double? targetAmount;
   final double? currentAmount;
   final String createdBy;
-  final bool isPartner;
   final DateTime createdAt;
 
   const VisionItem({
@@ -23,7 +22,6 @@ class VisionItem {
     this.targetAmount,
     this.currentAmount,
     required this.createdBy,
-    required this.isPartner,
     required this.createdAt,
   });
 
@@ -39,7 +37,6 @@ class VisionItem {
       targetAmount: (d['targetAmount'] as num?)?.toDouble(),
       currentAmount: (d['currentAmount'] as num?)?.toDouble(),
       createdBy: d['createdBy'] ?? '',
-      isPartner: d['isPartner'] ?? false,
       createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -53,7 +50,6 @@ class VisionItem {
         'targetAmount': targetAmount,
         'currentAmount': currentAmount,
         'createdBy': createdBy,
-        'isPartner': isPartner,
         'createdAt': Timestamp.fromDate(createdAt),
       };
 }
