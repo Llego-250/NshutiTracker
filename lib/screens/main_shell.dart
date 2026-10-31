@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import 'dashboard_screen.dart';
 import 'planner_screen.dart';
-import 'find_screen.dart';
+import 'vision_board_screen.dart';
 import 'profile_screen.dart';
-import 'chat_screen.dart';
+import 'mood_screen.dart';
 import 'widgets/habit_tracker_widget.dart';
 
 class MainShell extends ConsumerStatefulWidget {
@@ -20,18 +20,18 @@ class _MainShellState extends ConsumerState<MainShell> {
   final _screens = const [
     DashboardScreen(),
     PlannerScreen(),
-    FindScreen(),
+    VisionBoardScreen(),
     ProfileScreen(),
   ];
 
-  void _openChat() => showModalBottomSheet(
+  void _openMood() => showModalBottomSheet(
         context: context,
         backgroundColor: bgCard,
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
         isScrollControlled: true,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
-        builder: (_) => const ChatScreen(),
+        builder: (_) => const MoodScreen(),
       );
 
   @override
@@ -40,11 +40,11 @@ class _MainShellState extends ConsumerState<MainShell> {
       backgroundColor: bgDark,
       body: _screens[_idx],
       floatingActionButton: GestureDetector(
-        onTap: _openChat,
+        onTap: _openMood,
         child: Container(
           width: 56, height: 56,
           decoration: const BoxDecoration(gradient: btnGradient, shape: BoxShape.circle),
-          child: const Icon(Icons.chat_bubble, color: Colors.white, size: 26),
+          child: const Icon(Icons.mood, color: Colors.white, size: 26),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -63,7 +63,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 _navItem(Icons.home_outlined, 'HOME', 0),
                 _navItem(Icons.calendar_today_outlined, 'PLANNER', 1),
                 const SizedBox(width: 56),
-                _navItem(Icons.location_on_outlined, 'FIND', 2),
+                _navItem(Icons.auto_awesome_outlined, 'VISION', 2),
                 _navItem(Icons.person_outline, 'PROFILE', 3),
               ],
             ),
@@ -86,7 +86,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       onTap: () => setState(() => _idx = idx),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(
-          active && idx == 2 ? Icons.location_on : icon,
+          icon,
           color: active ? accentPurple : textSecondary,
           size: 22,
         ),
