@@ -6,13 +6,10 @@ class AppUser {
   final String name;
   final String bio;
   final String? photoUrl;
-  final String? partnerId;
-  final String? partnerName;
-  final String? partnerSince;
   final String currentMood;
   final int accentIdx;
   final bool nocturnalMode;
-  final String habitType;   // e.g. 'water', 'heart', 'book'
+  final String habitType;   // e.g. 'water', 'journal', 'book'
   final int habitGoal;      // daily goal count
 
   const AppUser({
@@ -21,9 +18,6 @@ class AppUser {
     required this.name,
     required this.bio,
     this.photoUrl,
-    this.partnerId,
-    this.partnerName,
-    this.partnerSince,
     this.currentMood = 'Dreamy',
     this.accentIdx = 0,
     this.nocturnalMode = true,
@@ -39,9 +33,6 @@ class AppUser {
       name: d['name'] ?? '',
       bio: d['bio'] ?? '',
       photoUrl: d['photoUrl'],
-      partnerId: d['partnerId'],
-      partnerName: d['partnerName'],
-      partnerSince: d['partnerSince'],
       currentMood: d['currentMood'] ?? 'Dreamy',
       accentIdx: d['accentIdx'] ?? 0,
       nocturnalMode: d['nocturnalMode'] ?? true,
@@ -55,9 +46,6 @@ class AppUser {
         'name': name,
         'bio': bio,
         'photoUrl': photoUrl,
-        'partnerId': partnerId,
-        'partnerName': partnerName,
-        'partnerSince': partnerSince,
         'currentMood': currentMood,
         'accentIdx': accentIdx,
         'nocturnalMode': nocturnalMode,
@@ -69,9 +57,6 @@ class AppUser {
     String? name,
     String? bio,
     String? photoUrl,
-    String? partnerId,
-    String? partnerName,
-    String? partnerSince,
     String? currentMood,
     int? accentIdx,
     bool? nocturnalMode,
@@ -82,9 +67,6 @@ class AppUser {
         name: name ?? this.name,
         bio: bio ?? this.bio,
         photoUrl: photoUrl ?? this.photoUrl,
-        partnerId: partnerId ?? this.partnerId,
-        partnerName: partnerName ?? this.partnerName,
-        partnerSince: partnerSince ?? this.partnerSince,
         currentMood: currentMood ?? this.currentMood,
         accentIdx: accentIdx ?? this.accentIdx,
         nocturnalMode: nocturnalMode ?? this.nocturnalMode,
