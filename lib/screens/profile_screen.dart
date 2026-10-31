@@ -114,50 +114,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Bond evolution
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(16)),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Bond Evolution',
-                            style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text('Milestone: Soul Sync',
-                            style: TextStyle(color: textSecondary, fontSize: 12)),
-                      ]),
-                      SizedBox(
-                        width: 56, height: 56,
-                        child: Stack(alignment: Alignment.center, children: [
-                          const CircularProgressIndicator(
-                            value: 0.78,
-                            backgroundColor: bgCard2,
-                            valueColor: AlwaysStoppedAnimation(accentPink),
-                            strokeWidth: 5,
-                          ),
-                          const Text('78%',
-                              style: TextStyle(color: textPrimary, fontSize: 11, fontWeight: FontWeight.bold)),
-                        ]),
-                      ),
-                    ]),
-                    const SizedBox(height: 16),
-                    _levelRow('PERSONAL GROWTH', 0.75, accentPurple, 'LEVEL 12'),
-                    const SizedBox(height: 10),
-                    _levelRow('SHARED WELLNESS', 0.55, accentPink, 'LEVEL 09'),
-                  ]),
-                ),
-                const SizedBox(height: 16),
-
                 // Habit tracker settings
                 _habitSettingsCard(context, ref, user.uid, user.habitType, user.habitGoal),
                 const SizedBox(height: 16),
 
-                // Sanctuary style
+                // Appearance
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(16)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('Sanctuary Style',
+                    const Text('Appearance',
                         style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 16),
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -198,14 +164,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Partner settings
-                if (user.partnerId != null)
-                  _actionTile(Icons.link, 'Partner Settings',
-                      'Connected with ${user.partnerName ?? "partner"}',
-                      trailing: const Icon(Icons.settings, color: textSecondary, size: 18)),
-                const SizedBox(height: 10),
-                _actionTile(Icons.send, 'Send a Care Note', 'Surprise your partner with a digital hug'),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
 
                 // Logout
                 GestureDetector(
@@ -242,7 +201,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         const Text('Daily Habit Tracker',
             style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 4),
-        const Text('Choose your shared daily habit icon',
+        const Text('Choose your daily habit icon',
             style: TextStyle(color: textSecondary, fontSize: 12)),
         const SizedBox(height: 16),
 
@@ -293,43 +252,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ]),
     );
   }
-
-  Widget _levelRow(String label, double val, Color color, String level) => Column(children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(label, style: const TextStyle(color: textSecondary, fontSize: 11)),
-          Text(level, style: TextStyle(color: color, fontSize: 11)),
-        ]),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: val,
-            backgroundColor: bgCard2,
-            valueColor: AlwaysStoppedAnimation(color),
-            minHeight: 6,
-          ),
-        ),
-      ]);
-
-  Widget _actionTile(IconData icon, String title, String subtitle, {Widget? trailing}) =>
-      Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: bgCard, borderRadius: BorderRadius.circular(14)),
-        child: Row(children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-                color: accentPink.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: accentPink, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(color: textPrimary, fontWeight: FontWeight.w600)),
-            Text(subtitle, style: const TextStyle(color: textSecondary, fontSize: 12)),
-          ])),
-          trailing ?? const Icon(Icons.chevron_right, color: textSecondary),
-        ]),
-      );
 
   void _editBio(BuildContext context, WidgetRef ref, String uid, String current) {
     final ctrl = TextEditingController(text: current);
